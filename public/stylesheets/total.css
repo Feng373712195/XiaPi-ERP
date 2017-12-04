@@ -1,0 +1,106 @@
+body{
+	min-width: 1680px;
+}
+
+.head{
+	text-align: center;
+	margin: 0 auto;
+	margin-bottom: 20px;
+	margin-top: 20px;
+	width: 90%;
+	color: gray;
+}
+
+.content-box{
+	background-color: lightgray;
+	margin: 0 auto;
+	padding-top:.1px;
+	width: 95%;
+	height: 90vh;
+}
+
+/*userbox*/
+.user-box{
+	margin: 0 auto;
+	margin-top: 20px;
+	background-color:gray;
+	height: 22vh;
+	width: 98%;
+}
+
+.u-user{
+	float: left;
+	line-height: 22vh;
+	width: 20%;
+	color: white;
+}
+
+.u-user label{
+	margin-left: 40px;
+}
+
+
+
+/*bottombox*/
+/*.bottom-box{
+	background-color:lightsteelblue;
+	float: right;
+	margin:20px 1% 0 0;
+	height: 10vh;
+	width: 40%;
+}*/
+
+#total-box{
+	float: right;
+	margin: 20px 1% 0 0%;
+}
+
+#total-box #total-title div{
+	display: table-cell;
+	height: 50px;
+	width: 150px;
+	border: 1px solid darkolivegreen;
+	line-height: 50px;
+	text-align: center;
+	background-color: gray;
+	color: white;
+}
+
+#total-box #total-num div{
+	display: table-cell;
+	height: 50px;
+	width: 150px;
+	border: 1px solid darkolivegreen;
+	line-height: 50px;
+	text-align: center;
+	background-color: lightslategray;
+	color: white;
+}
+
+
+/*top*/
+#top{
+	width: 25%;
+	font-size: 1.0rem;
+	position: fixed;
+	top: 10px;
+	right: 40px;
+}
+
+#top #username{
+	display: inline-block;
+}
+
+#top button{
+	display: inline-block;
+	vertical-align: middle;
+	margin-left: 10%;
+}
+
+select{
+	position: absolute;
+	right: 3.5%;
+	display: inline-block;
+	text-align: center;
+	width: 10%;
+}

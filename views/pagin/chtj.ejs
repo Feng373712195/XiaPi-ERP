@@ -1,0 +1,807 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title><%= title %></title>
+		<link rel="stylesheet" type="text/css" href="stylesheets/mui.css">
+		<link rel="stylesheet" type="text/css" href="stylesheets/chtj.css"/>
+	</head>
+	
+	<body>
+		<h2 class='head'>出货统计</h2>
+		<div id="top">您好   <span id='username'><%= session %></span><button id='logout'>登出</button></div>
+		<div class="content-box">
+			<div class="top-btnbox">
+				<div class="left-box">
+					<button id='updata-Btn'>导入Execl</button>
+					<input id="fileupload" type="file" name="fileupload" style="display: none;">
+				</div>
+				<div class="right-box">
+					<input type="text" name="Addcode" id="Addcode" value="" placeholder="请输入搜索包裹查询号码"/>
+					<button id='autobtn'>自动添加</button>
+					<button id='textbtn'>文本添加</button>
+					<input id="fileupload2" type="file" name="fileupload2" style="display: none;">
+				</div>
+			</div>
+			
+			<!--出货单历史-->
+			<ul id='Choice-ch'>
+				<!--<li>2016年12月25日出货单</li>
+				<li>2016年12月26日出货单</li>
+				<li>2016年12月26日出货单</li>-->
+			</ul>
+			
+			<!--出货表-->
+			<div id="Excel-box">
+				<div class="E-head">
+					<div class="E-middle">訂單編號</div>
+					<div class="E-small">訂單狀態</div>
+					<div class="E-small">退貨 / 退款狀態</div>
+					<div class="E-middle">買家帳號</div>
+					<div class="E-middle">訂單成立時間</div>
+					<div class="E-middle">買家完成付款時間</div>
+					<div class="E-small">訂單小計 (TWD)</div>
+					<div class="E-small">買家支付的運費</div>
+					<div class="E-small">訂單總金額</div>
+					<div class="E-big">商品資訊</div>
+					<div class="E-big">收件地址</div>
+					<div class="E-middle">國家</div>
+					<div class="E-middle">城市</div>
+					<div class="E-middle">行政區</div>
+					<div class="E-middle">郵遞區號</div>
+					<div class="E-small">收件者姓名</div>
+					<div class="E-middle">電話號碼</div>
+					<div class="E-middle">寄送方式</div>
+					<div class="E-middle">付款方式</div>
+					<div class="E-middle">最晚出貨日期</div>
+					<div class="E-middle">包裹查詢號碼</div>
+					<div class="E-middle">實際出貨時間</div>
+					<div class="E-middle">订单完成時間</div>
+					<div class="E-big">買家備註</div>
+					<div class="E-big">备注</div>
+				</div>
+				<div class="E-content">
+					
+				</div>
+			</div>
+			
+			<!--底部按钮-->
+			<div class="bottom-btnbox">
+				<div class="left-box">
+					<button id='T-shipment'>已出貨</button>
+					<button id='F-shipment'>待出貨</button>
+					<button id='all'>全部</button>
+				</div>
+				<div class="totlebox">
+					<span>共有<span id='totle'>0</span>条</span>
+					<span>已采购<span id='ych'>0</span>条</span>
+					<span>未采购<span id='wch'>0</span>条</span>
+				</div>
+				<div class="right-box">
+					<button id='delS'>删除出货单</button>
+					<button id='del'>删除</button>
+					<button id='save'>保存</button>
+				</div>
+			</div>
+			
+			<!--保存弹框-->
+			<div id='pop-save'>
+				<div class="pop-conten">
+					<input type="text" name="saveName" id="saveName" value="" placeholder="保存文件名为..." />
+					<p>表格名称请以 2017-2- 的格式保存 如:2017-2-2,2017-2-自定义</p>
+				</div>	
+				<div class="pop-btnbox">
+					<button id="on">确定</button>
+					<button id='off'>取消</button>
+				</div>
+			</div>
+			
+			<!--蒙版-->
+		</div>
+		<div id="mark"></div>
+		
+		<script type="text/javascript" src="javascripts/jquery-1.11.1.min.js" ></script>
+		<script type="text/javascript" src="javascripts/jquery.ui.widget.js" ></script>
+		<script type="text/javascript" src="javascripts/jquery.fileupload.js" ></script>
+<!--		<script src="javascripts/mui.min.js"></script>-->
+		<script type="text/javascript">
+		
+			/*异步上传excel*/
+			$(function () {
+				var logout = document.getElementById('logout');
+
+				logout.addEventListener('click',function(){
+					window.location.href = '/logout';
+				})
+
+				$.ajax({
+				    type: 'POST',
+				   	dataType:'json',
+				   	data:{username:$("#username").text()}, 
+				    url:'/chtj/fine',
+				     success: function(data){
+				     	var Lidom = document.createDocumentFragment();
+				     	var ch = document.getElementById('Choice-ch');
+						for(var x in data){
+							var li = document.createElement('li');
+							li.innerText = data[x].tablename;
+							console.log(data[x].username);
+							Lidom.appendChild(li);
+						}
+						ch.appendChild(Lidom);
+						
+						$('#Choice-ch li').click(
+					    	function(){
+					    		if(document.querySelector('.li-active')){
+					    			document.querySelector('.li-active').classList.remove('li-active');
+					    		};
+					    		this.classList.add('li-active');
+					    		resData(this);
+					    	}
+					    );
+				     },
+				     error:function(err){
+				     	console.log(err);
+				     }
+				});
+				
+				
+				/*判断上传的是否xls文件*/
+				$('#fileupload').change(
+					function(){
+						if(!(/[^\.](\.xls)$/i.test(this.files[0].name))){
+							alert(this.files[0].name +"不为xls文件，文件必须为xls！");
+							return false;
+						}
+					}
+				);
+				
+				//判断上传的是否为txt文件
+				$('#fileupload2').change(
+					function(){
+						if(!(/[^\.](\.txt)$/i.test(this.files[0].name))){
+							alert(this.files[0].name +"不为txt文件，文件必须为txt！");
+							return false;
+						}
+					}
+				);
+				
+			    $('#fileupload').fileupload({
+			    	url:'updata/excel',
+			        crossDomain: true,
+			        done: function (e, data) {
+//			        	console.log(data.result);
+						if(document.querySelector('.li-active')){
+							document.querySelector('.li-active').classList.remove('li-active');
+						};
+						
+			        	var Ebody = document.querySelector('.E-content');
+			        	var state;
+			        	/*每次上传时 清空E-content*/
+			        	Ebody.innerHTML = '';
+			        	var fragment = document.createDocumentFragment();
+			        	for(var x in data.result.orders){
+			        		var line = document.createElement('div');
+			        		line.className = 'E-line';
+			        		line.style.width = '100%';
+			        		state = data.result.orders[x].state == '運送中' || data.result.orders[x].state =='运输中'?'已出貨':data.result.orders[x].state;
+
+			        		line.innerHTML = 	'<div class="E-middle code" contenteditable="true">'+data.result.orders[x].code+'</div>'+
+												'<div class="E-small shipment" >'+state+'</div>'+
+												'<div class="E-small" contenteditable="true">'+data.result.orders[x].refund+'</div>'+
+												'<div class="E-middle" contenteditable="true">'+data.result.orders[x].number+'</div>'+
+												'<div class="E-middle" contenteditable="true">'+data.result.orders[x].foundingTime+'</div>'+
+												'<div class="E-middle" contenteditable="true">'+data.result.orders[x].paymentTime+'</div>'+
+												'<div class="E-small" contenteditable="true">'+data.result.orders[x].subtotal+'</div>'+
+												'<div class="E-small" contenteditable="true">'+data.result.orders[x].freight+'</div>'+
+												'<div class="E-small" contenteditable="true">'+data.result.orders[x].total+'</div>'+
+												'<div class="E-big" contenteditable="true">'+data.result.orders[x].consultation+'</div>'+
+												'<div class="E-big" contenteditable="true">'+data.result.orders[x].recipientAddress+'</div>'+
+												'<div class="E-middle" contenteditable="true">'+data.result.orders[x].country+'</div>'+
+												'<div class="E-middle" contenteditable="true">'+data.result.orders[x].city+'</div>'+
+												'<div class="E-middle" contenteditable="true">'+data.result.orders[x].administrativeRegion+'</div>'+
+												'<div class="E-middle" contenteditable="true">'+data.result.orders[x].postcode+'</div>'+
+												'<div class="E-small" contenteditable="true">'+data.result.orders[x].recipients+'</div>'+
+												'<div class="E-middle" contenteditable="true">'+data.result.orders[x].telephone+'</div>'+
+												'<div class="E-middle" contenteditable="true">'+data.result.orders[x].dealingMethod+'</div>'+
+												'<div class="E-middle" contenteditable="true">'+data.result.orders[x].paymentMethod+'</div>'+
+												'<div class="E-middle" contenteditable="true">'+data.result.orders[x].latestTime+'</div>'+
+												'<div class="E-middle expressQuery" contenteditable="true">'+data.result.orders[x].expressQuery+'</div>'+
+												'<div class="E-middle" contenteditable="true">'+data.result.orders[x].realTime+'</div>'+
+												'<div class="E-middle" contenteditable="true">'+data.result.orders[x].completionTime+'</div>'+
+												'<div class="E-big" contenteditable="true">'+data.result.orders[x].buyerNotes+'</div>'+
+												'<div class="E-big" contenteditable="true">'+data.result.orders[x].remarks+'</div>'
+												
+							fragment.appendChild(line);
+			        	}
+			        	Ebody.appendChild(fragment);
+
+			        	totlenumfun();
+			        	
+			        	$('.E-line').click(
+					   		function(){
+					   			if(document.querySelector('.line-active')){
+					    			document.querySelector('.line-active').classList.remove('line-active');
+					    			$('.E-line div').css({
+					    				"background": "white" ,
+					    				"color":"#000"
+					    			})
+					    		};
+					    		this.classList.add('line-active');
+					    		 $(this).children('div').css({
+					    			"background": "darkgray" ,
+					    			"color":"white"
+					    		});
+					   		}
+					   	);
+					   	
+					   	$('.shipment').click(
+					   		function(){
+					   			if(this.parentNode.classList.contains('line-active')){
+					   				if(this.innerText == '待出货'||this.innerText == '待出貨'){
+					   					this.innerText = "已出貨";
+					   				}else if(this.innerText == '已出货'||this.innerText == '已出貨'){
+					   					this.innerText = "待出貨";
+					   				};
+					   			}
+					   		}
+					   	)
+			        }
+			    });
+
+				$('#fileupload2').fileupload({
+			    	url:'/uptext',
+			        crossDomain: true,
+			        done: function (e, data) {
+			        	var resArg = data.result.data;
+			        	var bool = true;
+
+						for(var x in resArg){
+							if(!/^[G]{1}[0-9]{11}$/.test(resArg[x].trim())){
+					    		bool = false;
+					    		break;
+					    	};
+						};
+
+			       		if(bool){
+			        		$('.expressQuery').each(function(index,item){
+			        			$('.expressQuery').parent().eq(index).hide();
+							});
+
+							$('.expressQuery').each(function(index,item){
+			        			for(var x in resArg){
+									if(item.innerText.trim() == resArg[x].trim()){
+										$('.shipment').eq(index).text('已出貨');
+										$('.expressQuery').parent().eq(index).show();
+									}
+			        			};
+							});
+
+							totlenumfun();
+
+			        	}else{
+			        		alert('数据格式有误')
+			        	}
+			        }
+			    });
+			    
+			    $('#updata-Btn').click(
+			    	function(){
+			    		$('#fileupload').click();	
+			   		 }
+			    );
+			   	
+			   	$('#T-shipment').click(
+			   		function(){
+			   			if(document.querySelector('li-active')||!document.querySelector('.E-content').innerHTML.trim() == ''){
+			   				shipmentS(true);
+			   			}else{
+			   				alert('未导入Excel或者未选择出货表');
+			   			}
+			   		}
+			   	);
+			   	
+			   	$('#F-shipment').click(
+			   		function(){
+			   			if(document.querySelector('li-active')||!document.querySelector('.E-content').innerHTML.trim() == ''){
+			   				shipmentS(false);
+			   			}else{
+			   				alert('未导入Excel或者未选择出货表');
+			   			}
+			   		}
+			   	);
+			   	
+			   	$('#del').click(
+			   		function(){
+			   			if(document.querySelector('.line-active')){
+			   				$('.line-active').remove();	
+			   			}else{
+			   				alert('未选择删除行');
+			   			}
+
+			   			totlenumfun();
+			   		}
+			   	)
+			   	
+			   	$('#delS').click(function(){
+			   		
+			   		if(!document.querySelector('.li-active')){
+			   			alert('未选择出货单');
+			   			return false;
+			   		}
+			   		
+				   	var r = confirm('确定删除 产品编号:<'+$('.li-active').text()+'>出货表吗?');
+					if(r){
+				   		$.ajax({
+						    type: 'POST',
+						   	dataType:'json',
+						   	data:{username:$("#username").text(),tablename:$('.li-active').text()},
+						    url:'/chtj/remove',
+						     success: function(data){
+						     	if(data.code == 0){
+					     			$.ajax({
+									    type: 'POST',
+									   	dataType:'json',
+									   	data:{username:$("#username").text()}, 
+									    url:'/chtj/fine',
+									     success: function(data){
+									     	var Lidom = document.createDocumentFragment();
+									     	var ch = document.getElementById('Choice-ch');
+									     	var Ebody = document.querySelector('.E-content');
+									     	ch.innerHTML = '';
+									     	/*删除完出货单 E-body也要清空*/
+									     	Ebody.innerHTML = '';
+									     	
+											for(var x in data){
+												var li = document.createElement('li');
+												li.innerText = data[x].tablename;
+												Lidom.appendChild(li);
+											}
+											ch.appendChild(Lidom);
+											
+											$('#Choice-ch li').click(
+										    	function(){
+										    		if(document.querySelector('.li-active')){
+										    			document.querySelector('.li-active').classList.remove('li-active');
+										    		};
+										    		this.classList.add('li-active');
+										    		resData(this);
+										    	}
+										    );
+									     },
+										 error:function(err){
+									     	console.log(err);
+									     }
+									});	
+									
+								}else{
+									alert('删除失败，请联系QQ：373712195');
+								}
+						     },
+						     error:function(err){
+						     	console.log(err);
+						     }
+						});
+					}
+			   	})
+			   	
+			   	$('#save').click(
+			   		function(){
+			   			if(document.querySelectorAll('.E-line').length == 0 ){
+				   			alert('未选择出货单');
+				   			return false;
+				   		}
+			   			
+			   			if(document.querySelector('.li-active')){
+							$("#saveName").val($('.li-active').text());
+						}
+			   			
+			   			$('#pop-save').show();
+			   			$('#mark').show();
+			   		}
+			   	)
+			   	
+			   	$('#on').click(
+			   		
+			   		function(){
+			   			var username = $("#username").text();
+			   			var tablename = $("#saveName").val();
+						
+						if(!/^\d{4}-\d{1,2}-/.test(tablename)){
+							alert('保存名格式错误');
+							return;
+						}
+						
+				   		var orders = {};
+						
+						$(".E-line").each(function(index,item){
+							var code = item.getElementsByTagName('div')[0].innerText;
+							
+							Object.defineProperty(orders,item.getElementsByTagName('div')[0].innerText,{
+								value :{},
+								enumerable:true
+							});
+							
+							orders[code].code = item.getElementsByTagName('div')[0].innerText;
+							orders[code].state= item.getElementsByTagName('div')[1].innerText;
+							orders[code].refund= item.getElementsByTagName('div')[2].innerText;
+							orders[code].number= item.getElementsByTagName('div')[3].innerText;
+							orders[code].foundingTime= item.getElementsByTagName('div')[4].innerText;
+							orders[code].paymentTime= item.getElementsByTagName('div')[5].innerText;
+							orders[code].subtotal= item.getElementsByTagName('div')[6].innerText;
+							orders[code].freight= item.getElementsByTagName('div')[7].innerText;
+							orders[code].total= item.getElementsByTagName('div')[8].innerText;
+							orders[code].consultation= item.getElementsByTagName('div')[9].innerText;
+							orders[code].recipientAddress= item.getElementsByTagName('div')[10].innerText;
+							orders[code].country= item.getElementsByTagName('div')[11].innerText;
+							orders[code].city= item.getElementsByTagName('div')[12].innerText;
+							orders[code].administrativeRegion= item.getElementsByTagName('div')[13].innerText;
+							orders[code].postcode= item.getElementsByTagName('div')[14].innerText;
+							orders[code].recipients= item.getElementsByTagName('div')[15].innerText;
+							orders[code].telephone= item.getElementsByTagName('div')[16].innerText;
+							orders[code].dealingMethod= item.getElementsByTagName('div')[17].innerText;
+							orders[code].paymentMethod= item.getElementsByTagName('div')[18].innerText;
+							orders[code].latestTime= item.getElementsByTagName('div')[19].innerText;
+							orders[code].expressQuery= item.getElementsByTagName('div')[20].innerText;
+							orders[code].realTime= item.getElementsByTagName('div')[21].innerText;
+							orders[code].completionTime= item.getElementsByTagName('div')[22].innerText;
+							orders[code].buyerNotes= item.getElementsByTagName('div')[23].innerText;
+							orders[code].remarks= item.getElementsByTagName('div')[24].innerText;
+							
+							//以下这三个属性 是出货金额所增加的
+							orders[code].cost = '0';
+							orders[code].szfreight = '0';
+							orders[code].ytexpressQuery = '';
+						});
+						
+						if(tablename.trim() == ''){
+							alert('保存表名不能为空');
+							return false;
+						}else{
+							
+							if(document.querySelector('.li-active')){
+								
+								$.ajax({
+								    type: 'POST',
+								   	dataType:'json',   
+								    url:'/chtj/fineOne',
+								    data:{username:username,tablename:tablename}, 
+								    success: function(data){
+								    	if($('.li-active').text() == tablename || !data){
+								    		$.ajax({
+											    type: 'POST',
+											   	dataType:'json',   
+											    url:'/chtj/update',
+											    data:{username:username,tablename:tablename,oldtablename:$('.li-active').text(),table:JSON.stringify(orders)}, 
+											     success: function(data){
+													alert('保存成功');
+													$('#pop-save').hide();
+							   						$('#mark').hide();	
+													/*此处 出货单历史应该刷新一下 */
+													$.ajax({
+													    type: 'POST',
+													   	dataType:'json',
+													   	data:{username:$("#username").text()}, 
+													    url:'/chtj/fine',
+													     success: function(data){
+													     	var Lidom = document.createDocumentFragment();
+													     	var ch = document.getElementById('Choice-ch');
+													     	ch.innerHTML = '';
+															for(var x in data){
+																var li = document.createElement('li');
+																if(data[x].tablename == $("#saveName").val()){
+																	li.className = 'li-active';
+																}
+																li.innerText = data[x].tablename;
+																Lidom.appendChild(li);
+															}
+															ch.appendChild(Lidom);
+															
+															$('#Choice-ch li').click(
+														    	function(){
+														    		if(document.querySelector('.li-active')){
+														    			document.querySelector('.li-active').classList.remove('li-active');
+														    		};
+														    		this.classList.add('li-active');
+														    		resData(this);
+														    	}
+														    );
+													     },
+													     error:function(err){
+													     	console.log(err);
+													     }
+													});
+											     },
+											     error:function(err){
+											     	console.log(err);
+											     }
+											});
+											
+								    	}else{
+								    		alert('已有此名称出货单')
+								    	}
+								    },
+								    error:function(err){
+								    	console.log(err);
+								    }
+								});
+								
+							}else{
+								
+								$.ajax({
+								    type: 'POST',
+								   	dataType:'json',   
+								    url:'/chtj/fineOne',
+								    data:{username:username,tablename:tablename}, 
+								    success: function(data){
+								    	if(!data){
+								    		$.ajax({
+											    type: 'POST',
+											   	dataType:'json',   
+											    url:'/chtj/save',
+											    data:{username:username,tablename:tablename,table:JSON.stringify(orders)}, 
+											     success: function(data){
+													alert('保存成功');
+													$('#pop-save').hide();
+							   						$('#mark').hide();	
+													/*此处 出货单历史应该刷新一下 */
+													$.ajax({
+													    type: 'POST',
+													   	dataType:'json',
+													   	data:{username:$("#username").text()}, 
+													    url:'/chtj/fine',
+													     success: function(data){
+													     	var Lidom = document.createDocumentFragment();
+													     	var ch = document.getElementById('Choice-ch');
+													     	ch.innerHTML = '';
+															for(var x in data){
+																var li = document.createElement('li');
+																if(x == data.length-1){
+																	li.className = 'li-active';
+																}
+																li.innerText = data[x].tablename;
+																Lidom.appendChild(li);
+															}
+															ch.appendChild(Lidom);
+															
+															$('#Choice-ch li').click(
+														    	function(){
+														    		if(document.querySelector('.li-active')){
+														    			document.querySelector('.li-active').classList.remove('li-active');
+														    		};
+														    		this.classList.add('li-active');
+														    		resData(this);
+														    	}
+														    );
+													     },
+													     error:function(err){
+													     	console.log(err);
+													     }
+													});
+											     },
+											     error:function(err){
+											     	console.log(err);
+											     }
+											});
+											
+								    	}else{
+								    		alert('已有此名称出货单')
+								    	}
+								    },
+								    error:function(err){
+								    	console.log(err);
+								    }
+								});	
+							}					
+						};
+			   		}
+			   	)
+			   	
+			   	$('#off').click(
+			   		function(){
+			   			$('#pop-save').hide();
+			   			$('#mark').hide();	
+			   		}
+			   	)
+			   	
+			   	$('#all').click(
+			   		function(){
+			   			if(document.querySelector('li-active')||!document.querySelector('.E-content').innerHTML.trim() == ''){
+			   				$('.E-line').show();	
+			   			}else{
+			   				alert('未导入Excel或者未选择出货表');
+			   			}
+			   		}
+			   	)
+			   	
+			   	$('#Addcode').keyup(
+			   		function(){
+			   			var self = $(this).val();
+						$('.expressQuery').each(function(index,item){
+							if(item.innerText.indexOf(self)== -1){
+								$('.expressQuery').parent().eq(index).hide();
+							}else{
+								$('.expressQuery').parent().eq(index).show();
+							}
+						})
+			   		}
+			   	);
+			   	
+			   	$('#autobtn').click(function(){
+			   		
+			   		if(document.querySelectorAll('.E-line').length == 0 ){
+			   			alert('未选择出货单');
+			   			return false;
+				   	};
+			   		if(this.classList.contains('btn-active')){
+			   			this.classList.remove('btn-active');
+			   		}else{
+			   			this.classList.add('btn-active');
+			   		}
+			   	});
+
+			   	$('#textbtn').click(function(){
+			   		if(document.querySelectorAll('.E-line').length == 0 ){
+			   			alert('未选择出货单');
+			   			return false;
+				   	};
+			   		$('#fileupload2').click();	
+			   	})
+			   	
+			   	/*开启自动添加时*/
+			   	$(document).keyup(
+			   		function(e){
+			   			if(	document.querySelector('.btn-active') ){
+			   				if(!($("#Addcode").is(":focus"))){
+			   					$("#Addcode").focus()
+			   					$('#Addcode').val(e.key);
+			   				}else{
+			   					$('#Addcode').val(e.key);
+			   				}
+			   			}
+			   		}
+			   	)
+			   	
+			   	
+			   	
+			   	function shipmentS(bool){
+			   		if(bool){
+						$('.shipment').each(function(index,item){
+							if(item.innerText.trim() == '已出货'||item.innerText.trim() == '已出貨'){
+								$('.E-line').eq(index).show();
+							}else{
+								$('.E-line').eq(index).hide();
+							}
+						})
+			   		}else(
+			   			$('.shipment').each(function(index,item){
+							if(item.innerText.trim() == '待出货'||item.innerText.trim() == '待出貨'){
+								$('.E-line').eq(index).show();
+							}else{
+								$('.E-line').eq(index).hide();
+							}
+						})
+			   		);
+			   	};
+			   	
+			   	function resData(self){
+			   		
+			   		$.ajax({
+					    type: 'POST',
+					   	dataType:'json',
+					   	data:{username:$("#username").text(),tablename:self.innerText}, 
+					    url:'/chtj/fineOne',
+					     success: function(data){
+//					     	console.log(data);
+					     	var table = JSON.parse(data.table);
+					     	console.log(table);
+					     	
+					     	var Ebody = document.querySelector('.E-content');
+					     	var state;
+				        	/*每次上传时 清空E-content*/
+				        	Ebody.innerHTML = '';
+				        	var fragment = document.createDocumentFragment();
+				        	for(var x in table){
+				        		
+				        		//随便判断一个没有的属性 判断是不是新增行 如果没有这个属性就是新增行是就不显示
+				        		if(!table[x].hasOwnProperty('administrativeRegion')){
+				        			continue;
+				        		};
+				        		
+				        		var line = document.createElement('div');
+				        		line.className = 'E-line';
+				        		state = table[x] == '運送中' || table[x].state =='运输中'?'已出貨':table[x].state;
+				        		line.style.width = '100%';
+				        		line.innerHTML = 	'<div class="E-middle code" contenteditable="true">'+table[x].code+'</div>'+
+													'<div class="E-small shipment" >'+state+'</div>'+
+													'<div class="E-small" contenteditable="true">'+table[x].refund+'</div>'+
+													'<div class="E-middle" contenteditable="true">'+table[x].number+'</div>'+
+													'<div class="E-middle" contenteditable="true">'+table[x].foundingTime+'</div>'+
+													'<div class="E-middle" contenteditable="true">'+table[x].paymentTime+'</div>'+
+													'<div class="E-small" contenteditable="true">'+table[x].subtotal+'</div>'+
+													'<div class="E-small" contenteditable="true">'+table[x].freight+'</div>'+
+													'<div class="E-small" contenteditable="true">'+table[x].total+'</div>'+
+													'<div class="E-big" contenteditable="true">'+table[x].consultation+'</div>'+
+													'<div class="E-big" contenteditable="true">'+table[x].recipientAddress+'</div>'+
+													'<div class="E-middle" contenteditable="true">'+table[x].country+'</div>'+
+													'<div class="E-middle" contenteditable="true">'+table[x].city+'</div>'+
+													'<div class="E-middle" contenteditable="true">'+table[x].administrativeRegion+'</div>'+
+													'<div class="E-middle" contenteditable="true">'+table[x].postcode+'</div>'+
+													'<div class="E-small" contenteditable="true">'+table[x].recipients+'</div>'+
+													'<div class="E-middle" contenteditable="true">'+table[x].telephone+'</div>'+
+													'<div class="E-middle" contenteditable="true">'+table[x].dealingMethod+'</div>'+
+													'<div class="E-middle" contenteditable="true">'+table[x].paymentMethod+'</div>'+
+													'<div class="E-middle" contenteditable="true">'+table[x].latestTime+'</div>'+
+													'<div class="E-middle expressQuery" contenteditable="true">'+table[x].expressQuery+'</div>'+
+													'<div class="E-middle" contenteditable="true">'+table[x].realTime+'</div>'+
+													'<div class="E-middle" contenteditable="true">'+table[x].completionTime+'</div>'+
+													'<div class="E-big" contenteditable="true">'+table[x].buyerNotes+'</div>'+
+													'<div class="E-big" contenteditable="true">'+table[x].remarks+'</div>'
+													
+								fragment.appendChild(line);
+				        	}
+				        	Ebody.appendChild(fragment);
+
+				        	totlenumfun();
+				        	
+					        $('.E-line').click(
+						   		function(){
+						   			if(document.querySelector('.line-active')){
+						    			document.querySelector('.line-active').classList.remove('line-active');
+						    			$('.E-line div').css({
+						    				"background": "white" ,
+						    				"color":"#000"
+						    			})
+						    		};
+						    		this.classList.add('line-active');
+						    		 $(this).children('div').css({
+						    			"background": "darkgray" ,
+						    			"color":"white"
+						    		});
+						   		}
+						   	);
+						   	
+						   	$('.shipment').click(
+						   		function(){
+						   			if(this.parentNode.classList.contains('line-active')){
+						   				if(this.innerText == '待出货'||this.innerText == '待出貨'){
+						   					this.innerText = "已出貨";
+						   				}else if(this.innerText == '已出货'||this.innerText == '已出貨'){
+						   					this.innerText = "待出貨";
+						   				};
+						   			}
+
+						   			totlenumfun();
+						   		}
+						   	)
+					     },
+						 error:function(err){
+					     	console.log(err);
+					    }
+					});	
+			   	}
+
+			   	function totlenumfun(){
+			   		var ychIndex = 0;
+			   		var wchIndex = 0;
+			   		var chd =  Array.prototype.slice.call(document.querySelectorAll('.E-line'));
+			   		if(chd.length > 0){
+						$('#totle').text(chd.length);
+						for(var x in chd){
+							if(chd[x].querySelector('.shipment').innerText == '待出货'||chd[x].querySelector('.shipment').innerText == '待出貨'){
+								wchIndex++;
+							}else if(chd[x].querySelector('.shipment').innerText == '已出货'||chd[x].querySelector('.shipment').innerText == '已出貨'){
+								ychIndex++;
+							};
+						};
+
+						$('#ych').text(ychIndex);
+						$('#wch').text(wchIndex);
+			   		}
+			   	}
+			   	
+			});
+			
+		</script>
+	</body>
+</html>

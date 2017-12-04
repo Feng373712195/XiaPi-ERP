@@ -1,0 +1,615 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title><%= title %></title>
+		<link rel="stylesheet" type="text/css" href="stylesheets/mui.css">
+		<link rel="stylesheet" type="text/css" href="stylesheets/chje.css"/>
+	</head>
+	
+	<body>
+		<h2 class='head'>出货金额</h2>
+		<div id="top">您好   <span id='username'><%= session %></span><button id='logout'>登出</button></div>
+		<div class="content-box">
+			
+			<!--出货单历史-->
+			<ul id='Choice-ch'></ul>
+			
+			<!--出货表-->
+			<div id="Excel-box">
+				<div class="E-head">
+					<div class="E-big">商品名稱</div>
+					<div class="E-small">得標數量</div>
+					<div class="E-small">應收金額</div>
+					<div class="E-small">實際到賬金額</div>
+					<div class="E-small">人民幣</div>
+					<div class="E-small">成本</div>
+					<div class="E-small">深圳運費</div>
+					<div class="E-small">純利潤</div>
+					<div class="E-small">收件人</div>
+					<div class="E-middle">電話</div>
+					<div class="E-middle">單號</div>
+					<div class="E-middle">寄送方式</div>
+					<div class="E-middle">付款方式</div>
+					<div class="E-middle">包裹查詢號碼</div>
+					<div class="E-middle">深圳圓通快遞單號</div>
+				</div>
+				<div class="E-content">
+					
+				</div>
+			</div>
+			
+			<div id='total-box'>
+				<div id='total-title'>
+					<div>得標數量</div>
+					<div>應收金額</div>
+					<div>實際到賬金額</div>
+					<div>人民幣</div>
+					<div>成本</div>
+					<div>深圳運費</div>
+					<div>純利潤</div>
+				</div>
+				<div id='total-num'>
+					<div id='sl'></div>
+					<div id='je'></div>
+					<div id='sj'></div>
+					<div id='rmb'></div>
+					<div id='cb'></div>
+					<div id='yf'></div>
+					<div id='lr'></div>
+				</div>
+			</div>
+
+			<img class='picbox' src=''/>
+			
+			<!--底部按钮-->
+			<div class="bottom-btnbox">
+				<div class="right-box">
+					<button id='add'>添加</button>
+					<button id='del'>删除</button>
+					<button id='save'>保存</button>
+				</div>
+			</div>
+		</div>
+		
+		<script type="text/javascript" src="javascripts/jquery-1.11.1.min.js" ></script>
+<!--		<script src="javascripts/mui.min.js"></script>-->
+		<script type="text/javascript">
+			
+			$(function(){
+				
+				var index , table , qureycode;
+				
+				addIndex = 0;
+//				var rate;
+//				var n = new Date();
+//				var today = n.getFullYear()+'-'+(n.getMonth()+1)+'-'+n.getDate();
+//				
+//				localStorage.removeItem(today);
+//				
+//				
+//				//获取汇率  一天只获取一次
+//				if(localStorage.getItem(today) != null){
+//					console.log('不是第一次进入此页 已经有过时间缓存');
+//					
+//					var t = localStorage.getItem(today);
+//					var newt = n.getFullYear()+'-'+(n.getMonth()+1)+'-'+n.getDate();
+//					
+//					if(t == newt){
+//						console.log('同一天 不用获取')
+//						rate = localStorage.getItem('rate')
+//					}else{
+//						console.log('时间不同  重新获取');
+//						$.ajax({
+//						    type: 'get',
+//						   	dataType:'jsonp',
+//						   	jsonp:'jsoncallback', 
+//						    url:'http://api.k780.com:88/?app=finance.rate&scur=CNY&tcur=TWD&appkey=22721&sign=2df62e8f5dd53a9d18bf5a52a47c404f&jsoncallback=data',
+//						     success: function(data){
+//						     	console.log(data)
+//						     	rate = Number(data.result.rate).toFixed(1);
+//						     	$('#rate').text('今日 台币/人民币 汇率:' + rate);
+//						     	localStorage.setItem('rate',rate);
+//						     },
+//						     error:function(err){
+//						     	console.log(err);
+//						     }
+//						});
+//					}
+//					
+//				}else{
+//					console.log('第一次进此页面 初始化缓存');
+//					
+//					localStorage.setItem('today',today);
+//					$.ajax({
+//						    type: 'get',
+//						   	dataType:'jsonp',
+//						   	jsonp:'jsoncallback', 
+//						    url:'http://api.k780.com:88/?app=finance.rate&scur=CNY&tcur=TWD&appkey=22721&sign=2df62e8f5dd53a9d18bf5a52a47c404f&jsoncallback=data',
+//						     success: function(data){
+//						     	console.log(data)
+//						     	rate = Number(data.result.rate).toFixed(1);
+//						    	$('#rate').text('今日 台币/人民币 汇率:' + rate);
+//						     	localStorage.setItem('rate',rate);
+//						     },
+//						     error:function(err){
+//						     	console.log(err);
+//						     }
+//					});
+//				}	
+
+				var logout = document.getElementById('logout');
+
+				logout.addEventListener('click',function(){
+					window.location.href = '/logout';
+				})
+							
+				//获取出货单
+				$.ajax({
+				    type: 'POST',
+				   	dataType:'json',
+				   	data:{username:$("#username").text()}, 
+				    url:'/chtj/fine',
+				     success: function(data){
+				     	var Lidom = document.createDocumentFragment();
+				     	var ch = document.getElementById('Choice-ch');
+						for(var x in data){
+							var li = document.createElement('li');
+							li.innerText = data[x].tablename;
+							Lidom.appendChild(li);
+						}
+						ch.appendChild(Lidom);
+						
+						$('#Choice-ch li').click(
+					    	function(){
+					    		if(document.querySelector('.li-active')){
+					    			document.querySelector('.li-active').classList.remove('li-active');
+					    		};
+					    		this.classList.add('li-active');
+					    		resData(this);
+					    	}
+					    );
+				     },
+				     error:function(err){
+				     	console.log(err);
+				     }
+				});
+				
+			});
+						
+			$('#del').click(function(){
+				
+				if(!document.querySelector('.li-active')){
+		   			alert('未选择出货单');
+		   			return false;
+			   	}
+				
+				if(!document.querySelector('.line-active')){
+					alert('未选择表行');
+					return false;
+				}
+					
+				if(document.querySelector('.line-active').dataset.del == 'true'){
+					
+					var num = 0,total = 0,subtotal = 0,rmb = 0,cost = 0,freight = 0, profit = 0,s = 0;
+					
+					//删除table 选择的属性 
+					delete table[ 'add'+ document.querySelector('.line-active').dataset.add ];
+					
+					document.querySelector('.line-active').remove();				
+					index = 0;
+					
+					$('.E-line').each(function(index,item){
+						//重新排序data-li
+						document.querySelectorAll('.E-line')[index].setAttribute('data-li',index);
+						s = index;
+						
+						num += Number(document.querySelectorAll('.num')[index].innerText);
+						total += Number(document.querySelectorAll('.total')[index].innerText);
+						subtotal += Number(document.querySelectorAll('.subtotal')[index].innerText);
+						rmb += Number(document.querySelectorAll('.rmb')[index].innerText);
+						cost += Number(document.querySelectorAll('.cost')[index].innerText);
+						freight += Number(document.querySelectorAll('.freight')[index].innerText);
+						profit += Number(document.querySelectorAll('.profit')[index].innerText);
+					});
+					document.getElementById('sl').innerText = num;
+					document.getElementById('je').innerText = total;
+					document.getElementById('sj').innerText = subtotal;
+					document.getElementById('rmb').innerText = rmb.toFixed(1);
+					document.getElementById('cb').innerText = cost;
+					document.getElementById('yf').innerText = freight;
+					document.getElementById('lr').innerText = profit.toFixed(1);
+					
+					index = s;
+					index ++;
+					
+				}else{
+					alert('只能删除新增行');
+				}
+			});
+			
+			//保存按钮
+			$('#save').click(function(){
+				
+				if(!document.querySelector('.li-active')){
+		   			alert('未选择出货单');
+		   			return false;
+		   		}
+				
+				var temp = 0;
+				
+				for(var i = 0; i<document.querySelectorAll('.cost').length;i++){
+										
+					if( document.querySelectorAll('.cost')[i].parentNode.getAttribute('data-add') ){
+						//在add 已经创建在table创建了 新增对象 保存只要修改属性就行啦
+						table['add'+ document.querySelectorAll('.cost')[i].parentNode.getAttribute('data-add') ].consultation = document.querySelectorAll('.cost')[i].parentNode.children[0].innerText;
+						table['add'+ document.querySelectorAll('.cost')[i].parentNode.getAttribute('data-add') ].total = document.querySelectorAll('.cost')[i].parentNode.children[2].innerText;
+						table['add'+ document.querySelectorAll('.cost')[i].parentNode.getAttribute('data-add') ].subtotal = document.querySelectorAll('.cost')[i].parentNode.children[3].innerText;
+						table['add'+ document.querySelectorAll('.cost')[i].parentNode.getAttribute('data-add') ].cost = document.querySelectorAll('.cost')[i].parentNode.children[5].innerText;
+						table['add'+ document.querySelectorAll('.cost')[i].parentNode.getAttribute('data-add') ].szfreight = document.querySelectorAll('.cost')[i].parentNode.children[6].innerText;
+						table['add'+ document.querySelectorAll('.cost')[i].parentNode.getAttribute('data-add') ].recipients = document.querySelectorAll('.cost')[i].parentNode.children[8].innerText;
+						table['add'+ document.querySelectorAll('.cost')[i].parentNode.getAttribute('data-add') ].telephone = document.querySelectorAll('.cost')[i].parentNode.children[9].innerText;
+						table['add'+ document.querySelectorAll('.cost')[i].parentNode.getAttribute('data-add') ].code = document.querySelectorAll('.cost')[i].parentNode.children[10].innerText;
+						table['add'+ document.querySelectorAll('.cost')[i].parentNode.getAttribute('data-add') ].dealingMethod = document.querySelectorAll('.cost')[i].parentNode.children[11].innerText;
+						table['add'+ document.querySelectorAll('.cost')[i].parentNode.getAttribute('data-add') ].paymentMethod = document.querySelectorAll('.cost')[i].parentNode.children[12].innerText;
+						table['add'+ document.querySelectorAll('.cost')[i].parentNode.getAttribute('data-add') ].expressQuery = document.querySelectorAll('.cost')[i].parentNode.children[13].innerText;
+						table['add'+ document.querySelectorAll('.cost')[i].parentNode.getAttribute('data-add') ].ytexpressQuery = document.querySelectorAll('.cost')[i].parentNode.children[14].innerText;
+						
+					}else{
+						table[document.querySelectorAll('.code')[i].innerText].cost = document.querySelectorAll('.cost')[i].innerText;
+						table[document.querySelectorAll('.code')[i].innerText].szfreight = document.querySelectorAll('.freight')[i].innerText;
+					}
+				}
+				
+				$.ajax({
+				    type: 'post',
+				   	dataType:'json',
+				    url:'/chtj/update',
+				    data:{username:$("#username").text(),tablename:$('.li-active').text(),oldtablename:$('.li-active').text(),table:JSON.stringify(table)},
+				    success: function(data){
+						if(data){
+							alert('保存成功');
+						}
+				    },
+				    error:function(err){
+				     	console.log(err);
+				    }
+				});
+			});
+			
+			
+			$('#add').click(function(){
+				
+				if(!document.querySelector('.li-active')){
+		   			alert('未选择出货单');
+		   			return false;
+		   		}
+				
+				var addLine = document.createElement('div');
+				addLine.style.width = '100%';
+				addLine.className = 'E-line';
+				addLine.setAttribute('data-li',index);
+				addLine.setAttribute('data-del',true);
+				addLine.setAttribute('data-add',addIndex);
+				index ++;
+				
+        		addLine.innerHTML = '<div class="E-big" contenteditable="true"></div>'+
+									'<div class="E-small num" contenteditable="true">0</div>'+
+									'<div class="E-small total" contenteditable="true">0</div>'+
+									'<div class="E-small subtotal" contenteditable="true">0</div>'+
+									'<div class="E-small rmb" >0</div>'+
+									'<div class="E-small cost" contenteditable="true">0</div>'+
+									'<div class="E-small freight" contenteditable="true">0</div>'+
+									'<div class="E-small profit">0</div>'+
+									'<div class="E-small" contenteditable="true"></div>'+
+									'<div class="E-middle" contenteditable="true"></div>'+
+									'<div class="E-middle" contenteditable="true"></div>'+
+									'<div class="E-middle" contenteditable="true"></div>'+
+									'<div class="E-middle" contenteditable="true"></div>'+
+									'<div class="E-middle" contenteditable="true"></div>'+
+									'<div class="E-middle"contenteditable="true"></div>';
+									
+				document.querySelector('.E-content').appendChild(addLine);				
+				var Ebox = document.getElementById('Excel-box');
+				$('#Excel-box').scrollTop( $('#Excel-box')[0].scrollHeight);
+				
+				//新增时 给table新增属性
+				table['add'+ addIndex] = {
+					consultation:document.querySelectorAll('.cost')[ document.querySelectorAll('.cost').length-1 ].parentNode.children[0].innerText,
+					total:document.querySelectorAll('.cost')[ document.querySelectorAll('.cost').length-1 ].parentNode.children[2].innerText,
+					subtotal:document.querySelectorAll('.cost')[ document.querySelectorAll('.cost').length-1 ].parentNode.children[3].innerText,
+					cost:document.querySelectorAll('.cost')[ document.querySelectorAll('.cost').length-1 ].parentNode.children[5].innerText,
+					szfreight:document.querySelectorAll('.cost')[ document.querySelectorAll('.cost').length-1 ].parentNode.children[6].innerText,
+					recipients:document.querySelectorAll('.cost')[ document.querySelectorAll('.cost').length-1 ].parentNode.children[8].innerText,
+					telephone:document.querySelectorAll('.cost')[ document.querySelectorAll('.cost').length-1 ].parentNode.children[9].innerText,
+					code:document.querySelectorAll('.cost')[ document.querySelectorAll('.cost').length-1 ].parentNode.children[10].innerText,
+					dealingMethod:document.querySelectorAll('.cost')[ document.querySelectorAll('.cost').length-1 ].parentNode.children[11].innerText,
+					paymentMethod:document.querySelectorAll('.cost')[ document.querySelectorAll('.cost').length-1 ].parentNode.children[12].innerText,
+					expressQuery:document.querySelectorAll('.cost')[ document.querySelectorAll('.cost').length-1 ].parentNode.children[13].innerText,
+					ytexpressQuery:document.querySelectorAll('.cost')[ document.querySelectorAll('.cost').length-1 ].parentNode.children[14].innerText
+				}
+				//在table里添加完属性 在++
+				addIndex ++;
+				
+				console.log(table);
+				
+				 $('.E-line').click(
+			   		function(){
+			   			if(document.querySelector('.line-active')){
+			    			document.querySelector('.line-active').classList.remove('line-active');
+			    			$('.E-line div').css({
+			    				"background": "white" ,
+			    				"color":"#000"
+			    			})
+			    		};
+			    		this.classList.add('line-active');
+			    		 $(this).children('div').css({
+			    			"background": "darkgray" ,
+			    			"color":"white"
+			    		});
+			   		}
+			   	);
+			   	
+				//数量
+				$('.num').blur(function(){
+					var num = 0;
+					if( !(/^[0-9]+([.]{1}[0-9]+){0,1}$/).test($(this).text()) ){
+						$(this).text(0);
+						return false;
+					}
+					if($(this).text() == ''){
+						$(this).text(0)
+					}
+					$('.E-line').each(function(index,item){
+						num += Number(document.querySelectorAll('.num')[index].innerText);
+					})
+					document.getElementById('sl').innerText = num;
+				})
+				
+				//金额
+				$('.total').blur(function(){
+					var je = 0;
+					if( !(/^[0-9]+([.]{1}[0-9]+){0,1}$/).test($(this).text()) ){
+						$(this).text(0);
+						return false;
+					}
+					if($(this).text() == ''){
+						$(this).text(0)
+					}
+					$('.E-line').each(function(index,item){
+						je += Number(document.querySelectorAll('.total')[index].innerText);
+					})
+					document.getElementById('je').innerText = je;
+				})
+				
+				//实际金额
+				$('.subtotal').blur(function(){
+					var sj = 0,rmb = 0,lr = 0;
+					if( !(/^[0-9]+([.]{1}[0-9]+){0,1}$/).test($(this).text()) ){
+						$(this).text(0);
+						return false;
+					}
+					if($(this).text() == ''){
+						$(this).text(0)
+					}
+					$('.E-line').each(function(index,item){
+						sj += Number(document.querySelectorAll('.subtotal')[index].innerText);
+					})
+					document.getElementById('sj').innerText = sj;
+					document.querySelectorAll('.rmb')[this.parentNode.dataset.li].innerText = Number(document.querySelectorAll('.subtotal')[this.parentNode.dataset.li].innerText/5);
+					$('.E-line').each(function(index,item){
+						rmb += Number(document.querySelectorAll('.rmb')[index].innerText);
+					})
+					document.getElementById('rmb').innerText = rmb;
+					document.getElementById('lr').innerText = rmb;
+				})
+				
+				//成本
+				$('.cost').blur(function(){
+					var yf = 0,cost = 0;
+					if( !(/^[0-9]+([.]{1}[0-9]+){0,1}$/).test($(this).text()) ){
+						$(this).text(0);
+						return false;
+					}
+					if($(this).text() == ''){
+						$(this).text(0)
+					}
+					$('.E-line').each(function(index,item){
+						cost += Number(document.querySelectorAll('.cost')[index].innerText);
+						yf += Number(document.querySelectorAll('.freight')[index].innerText);
+					})
+					document.getElementById('cb').innerText = cost;
+					document.querySelectorAll('.profit')[this.parentNode.dataset.li].innerText = Number(document.querySelectorAll('.rmb')[this.parentNode.dataset.li].innerText) - Number(document.querySelectorAll('.cost')[this.parentNode.dataset.li].innerText);
+					document.getElementById('lr').innerText = Number(document.getElementById('rmb').innerText) - ( Number(cost) + Number(yf) );
+				})
+				
+				//运费
+				$('.freight').blur(function(){
+					var yf = 0,cost = 0;
+					if( !(/^[0-9]+([.]{1}[0-9]+){0,1}$/).test($(this).text()) ){
+						$(this).text(0);
+						return false;
+					}
+					if($(this).text() == ''){
+						$(this).text(0)
+					}
+					$('.E-line').each(function(index,item){
+						cost += Number(document.querySelectorAll('.cost')[index].innerText);
+						yf += Number(document.querySelectorAll('.freight')[index].innerText);
+					})
+					document.getElementById('yf').innerText = yf;
+					document.getElementById('lr').innerText = Number(document.getElementById('rmb').innerText) - ( Number(cost) + Number(yf) );
+				})
+
+			})
+			
+			
+			//点击出货单列表 展现数据
+			function resData(self){
+				
+			   		$.ajax({
+					    type: 'POST',
+					   	dataType:'json',
+					   	data:{username:$("#username").text(),tablename:self.innerText}, 
+					    url:'/chtj/fineOne',
+					    success: function(data){
+					     	table = JSON.parse(data.table);
+					     	console.log(table);
+					     	var num = 0,je = 0, sj = 0, rmb = 0;
+					     	
+					     	index = 0;
+					     	addIndex = 0;
+					     	
+					     	var Ebody = document.querySelector('.E-content');
+				        	/*每次上传时 清空E-content*/
+				        	Ebody.innerHTML = '';
+				        	var fragment = document.createDocumentFragment();
+				        	for(var x in table){
+				        		
+				        		if(table[x].state == '已出货' || table[x].state == '已出貨' || !table[x].hasOwnProperty('state')){
+				        							        			
+				        			num += Number(table[x].consultation.split(/\[\d\]/g).length-1);
+					        		je	+= Number(table[x].total);
+					        		sj += Number(table[x].subtotal);
+					        		rmb += Number(table[x].subtotal/5);
+					        		
+					        		var line = document.createElement('div');
+					        		
+					        		if(/add/.test(x)){
+					        			addIndex = x.replace(/add/,'');
+					        			line.setAttribute('data-add',addIndex);
+					        			line.setAttribute('data-del',true);
+					        		}else{
+					        			line.setAttribute('data-del',false);
+					        		}
+					        		
+					        		line.className = 'E-line';
+					        		line.setAttribute('data-li',index);
+					        		index++
+					        		line.style.width = '100%';     
+					        		line.innerHTML = 	'<div class="E-big">'+table[x].consultation.replace(/.(?=\d{4}\-\d{1,2})(?=[A-Z]{1,6}(-\w{4,5}){0,1})\-[A-Z]{1}\d{5}$/g,'$1</span>').replace(/.(主商品貨號:)/g,'$1<span class="highlight">')  +'</div>'+
+														'<div class="E-small num">'+(table[x].consultation.split(/\[\d\]/g).length-1) +'</div>'+
+														'<div class="E-small total">'+table[x].total+'</div>'+
+														'<div class="E-small subtotal">'+table[x].subtotal+'</div>'+
+														'<div class="E-small rmb">'+(table[x].subtotal/5)+'</div>'+
+														'<div class="E-small cost" contenteditable="true">'+table[x].cost+'</div>'+
+														'<div class="E-small freight" contenteditable="true">'+table[x].szfreight+'</div>'+
+														'<div class="E-small profit">'+(table[x].subtotal/5)+'</div>'+
+														'<div class="E-small">'+table[x].recipients+'</div>'+
+														'<div class="E-middle">'+table[x].telephone+'</div>'+
+														'<div class="E-middle code" >'+table[x].code+'</div>'+
+														'<div class="E-middle">'+table[x].dealingMethod+'</div>'+
+														'<div class="E-middle">'+table[x].paymentMethod+'</div>'+
+														'<div class="E-middle">'+table[x].expressQuery+'</div>'+
+														'<div class="E-middle">'+table[x].ytexpressQuery+'</div>'
+														
+									fragment.appendChild(line);
+				        		}
+				        	}
+				        	Ebody.appendChild(fragment);
+				        	
+				        	//遍历完成后 adIndex ++
+				        	addIndex ++ ;
+				        	
+				        	document.getElementById('sl').innerText = num;
+				        	document.getElementById('je').innerText = je;
+				        	document.getElementById('sj').innerText = sj;
+				        	document.getElementById('rmb').innerText = rmb.toFixed(1);
+				        	document.getElementById('cb').innerText = 0;
+				        	document.getElementById('yf').innerText = 0;
+				        	document.getElementById('lr').innerText = rmb.toFixed(1);
+
+				        	/*高亮字体绑定事件*/
+							/*$('.highlight').hover(function(e){
+								qureycode = this.innerText;
+								$.ajax({
+								    type: 'POST',
+								    url:'/search',
+								    data:{code:qureycode},
+								    dataType:'json',    
+									     success: function(data){
+									     	$('.picbox').attr('src','./uploadImg/'+qureycode+'/'+ data[0].pic[0]);
+									     },
+									     error:function(err){
+									     	console.log(err);
+									     }
+									});
+								$('.picbox').show();
+								$('.picbox').css('left',e.clientX);
+								$('.picbox').css('top',e.clientY);
+							},function(e){
+								$('.picbox').hide();
+								$('.picbox').attr('src','');
+							});*/
+				        	
+					        $('.E-line').click(
+						   		function(){
+						   			if(document.querySelector('.line-active')){
+						    			document.querySelector('.line-active').classList.remove('line-active');
+						    			$('.E-line div').css({
+						    				"background": "white" ,
+						    				"color":"#000"
+						    			})
+						    		};
+						    		this.classList.add('line-active');
+						    		 $(this).children('div').css({
+						    			"background": "darkgray" ,
+						    			"color":"white"
+						    		});
+						   		}
+						   	);
+						   	
+						   	$('.cost').blur(function(){
+						   		
+						   		var num = 0,je = 0, sj = 0, rmb = 0,cb = 0,yf = 0,lr = 0;
+//								console.log($(this).text());
+								if( !(/^[0-9]+([.]{1}[0-9]+){0,1}$/).test($(this).text()) ){
+									$(this).text(0);
+									return false;
+								}
+								if($(this).text() == ''){
+									$(this).text(0)
+								}
+								document.querySelectorAll('.profit')[this.parentNode.dataset.li].innerText = (Number(document.querySelectorAll('.rmb')[this.parentNode.dataset.li].innerText) - Number($(this).text())).toFixed(1);	 
+								$('.E-line').each(function(index,item){
+									num += Number(document.querySelectorAll('.num')[index].innerText);
+									je += Number(document.querySelectorAll('.total')[index].innerText);
+									sj += Number(document.querySelectorAll('.subtotal')[index].innerText);
+									rmb += Number(document.querySelectorAll('.rmb')[index].innerText);
+									cb += Number(document.querySelectorAll('.cost')[index].innerText);
+									yf += Number(document.querySelectorAll('.freight')[index].innerText);
+									lr += Number(document.querySelectorAll('.profit')[index].innerText);
+								});
+								document.getElementById('sl').innerText = num;
+					        	document.getElementById('je').innerText = je;
+					        	document.getElementById('sj').innerText = sj;
+					        	document.getElementById('rmb').innerText = rmb.toFixed(1);
+					        	document.getElementById('cb').innerText = cb;
+					        	document.getElementById('yf').innerText = yf;
+					        	document.getElementById('lr').innerText = lr.toFixed(1);
+							});
+							
+							$('.freight').blur(function(){
+								var yf = 0
+//								console.log($(this).text());
+								if( !(/^[0-9]+([.]{1}[0-9]+){0,1}$/).test($(this).text()) ){
+									$(this).text(0);
+									return false;
+								}
+								if($(this).text() == ''){
+									$(this).text(0)
+								}
+								
+								$('.E-line').each(function(index,item){
+									yf += Number(document.querySelectorAll('.freight')[index].innerText);
+								});
+					        	document.getElementById('yf').innerText = yf;
+					        	document.getElementById('lr').innerText = Number(document.getElementById('lr').innerText)-Number(document.getElementById('yf').innerText);
+							});
+						}
+					});
+			   	}
+		</script>
+
+	</body>
+</html>

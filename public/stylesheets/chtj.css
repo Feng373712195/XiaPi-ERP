@@ -1,0 +1,220 @@
+body{
+	min-width: 1680px;
+}
+
+.head{
+	text-align: center;
+	margin: 0 auto;
+	margin-bottom: 20px;
+	margin-top: 20px;
+	width: 90%;
+	color: gray;
+}
+
+.content-box{
+	background-color: lightgray;
+	margin: 0 auto;
+	width: 95%;
+	height: 90vh;
+}
+
+.content-box .top-btnbox{
+	padding-top: 10px;
+	height: 50px;
+}
+
+.content-box .bottom-btnbox{
+	padding: 20px 10px 0px 10px;
+	height: 50px;
+}
+
+
+.content-box .top-btnbox .left-box,.content-box .bottom-btnbox .left-box{
+	float: left;
+}
+
+.content-box .top-btnbox .left-box button{
+	margin-top: 2.5px;
+	margin-left: 15px;
+}
+
+.content-box .top-btnbox .right-box,.content-box .bottom-btnbox .right-box{
+	float: right;
+}
+
+.content-box .top-btnbox .right-box #Addcode{
+	margin: 0;
+	padding: 0;
+	margin-right: 20px;
+	width: 40%;
+	float: left;
+}
+
+.content-box .top-btnbox .right-box button{
+	margin-top: 2.5px;
+}
+
+#Choice-ch{
+	width: 99%;
+	margin: 0 auto;
+	margin-top: 20px;
+	padding: 0;
+	height: 100px;
+	list-style: none;
+	border: 1px solid gray;
+	overflow-y: scroll;
+}
+
+#Choice-ch li{
+	margin: 0 auto;
+	margin: 5px 0;
+	margin-left: 0.5%;
+	width: 99%;
+	background-color:gray;
+	color: white;
+	padding:0.5%;
+	-webkit-transition: 0.5s;
+}
+#Choice-ch li:active{
+	background-color: gainsboro;
+}
+
+.li-active{
+	background-color: darkgray !important;
+}
+
+#Excel-box{
+	margin: 0 auto;
+	margin-top: 20px;
+	width: 99%;
+	height: 60vh;
+	border: 1px solid gray;
+	overflow-x: scroll;
+	overflow-y: scroll;
+}
+#Excel-box .E-head{
+	height: 60px;
+	line-height: 60px;
+	border-bottom: 1px solid gray;
+	color: white;
+	background-color: darkgray;
+}
+#Excel-box .E-head div{
+	border-right: 1px solid gray;
+}
+
+#Excel-box .E-head,#Excel-box .E-content{
+	width:7400px;
+}
+
+.E-big{
+	width: 500px;
+	word-wrap:break-word;  /*遇到空格整个单词显示不完就自动换行到下一行*/
+	word-break:break-all;
+}
+.E-middle{
+	width: 300px;
+	word-wrap:break-word;  /*遇到空格整个单词显示不完就自动换行到下一行*/
+	word-break:break-all;
+}
+.E-small{
+	width: 150px;
+	word-wrap:break-word;  /*遇到空格整个单词显示不完就自动换行到下一行*/
+	word-break:break-all;
+}
+
+#Excel-box .E-head div,#Excel-box .E-content  .E-line div{
+	text-align: center;
+	display:table-cell;
+}
+
+.E-line div{
+	background-color: white;
+	vertical-align: middle;
+	padding: 10px 0;
+	border:1px solid gray ;
+}
+
+.btn-active{
+	color: white;
+	background-color:gray;
+}
+
+/*top*/
+#top{
+	width: 25%;
+	font-size: 1.0rem;
+	position: fixed;
+	top: 10px;
+	right: 40px;
+}
+
+#top #username{
+	display: inline-block;
+}
+
+#top button{
+	display: inline-block;
+	vertical-align: middle;
+	margin-left: 10%;
+}
+
+#pop-save{
+	position: absolute;
+	display: none;
+	top: 30%;
+	width: 840px;
+	margin-left: 420px;
+	height: 140px;
+	background-color: white;
+	border-radius:10px;
+	background-color: #EFEFF4;
+	z-index: 999;
+}
+
+#pop-save .pop-conten p{
+	margin-left: 5%;
+}
+
+#on{
+	width: 48%;
+	background-color: red;
+	color: white;
+}
+
+#off{
+	width: 48%;
+	background-color: #00BFFF;
+	color: white;
+}
+
+#saveName{
+	margin-left: 5%;
+	margin-top: 10px;
+	margin-bottom: 10px;
+	width: 90%;
+}
+
+.pop-btnbox{
+	margin-left: 35%;
+	width: 30%;
+}
+
+#mark{
+	display: none;
+	position: fixed;
+	top: 0;
+	width: 100%;
+	height: 100vh;
+	background-color: white;
+	opacity: 0;
+}
+
+.totlebox{
+	float: left;
+	margin-left: 40px;
+	margin-top: 5px;
+	width: 30%;
+	color: #FFF;
+	font-weight: bold;
+}

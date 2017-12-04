@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests" />
+		<title><%= title %></title>
+		<link rel="stylesheet" type="text/css" href="/stylesheets/purchasing.css"/>
+		<script type="text/javascript" src='/javascripts/jquery-1.3.2.min.js'></script>
+	</head>
+	<style type="text/css">
+		.s-je{
+			background-color:green !important;
+		}
+		.s-qh{
+			background-color: red !important;
+		}
+		.no-tap-list{
+			font-family: "微软雅黑";
+			color: white;
+			padding: 10px;
+			background-color: deepskyblue;
+		}
+	</style>
+	<body>
+		<div>
+			<h2 class="head">采购单</h2>
+			<div class="p-box">
+				<div class="right-box">
+					<div class="input-row">
+						<label>编号:</label>
+						<input type="text" name="" id="code" value="" />
+					</div>
+					<!--采购列表-->
+					<div id='app-list'>
+						<div id='searchbox'>
+							<div id='search-Item'>
+								<button id='qj'>区间搜索</button>
+								<button id='pt'>普通搜索</button>
+								<!--<div id='cxbtn'><img src="../img/back.png"/></div>-->
+							</div>
+							<div id='searchList'>
+								<div id='interval-scearch' style="display:none;">
+									<input id='l-time' type="date" name="" id="" value="" />
+									<input id='r-time' type="date" name="" id="" value="" />
+								</div>
+								<div id='pt-scearch' style="display:block;">
+									<input id='now-time' type="date" name="" id="" value="" />
+								</div>
+								<button id='search-btn'>搜索</button>
+							</div>
+						</div>
+						
+						<div class="list-box">
+							<ul class="list-ul">
+							</ul>
+						</div>		
+					</div>
+				</div>
+				<div class="middl-box" id='add'>添加</div>
+				<!--startprint1-->
+				<table id='head-table' border="0">
+						<tr>
+							<th>主图</th>
+							<th>标题</th>
+							<th>拿货地址</th>
+							<th>网上购买</th>
+							<th>备注</th>
+						</tr>
+				</table>
+				<div class="left-box">
+					<table id='data-table' border="1">
+					</table>
+					<!--endprint1-->  
+					<div id="top">TOP</div>
+					<div id="clean">clean</div>
+					<div id='app'>保存</div>
+					<div id='print'>打印</div>
+					<div id='today'>today</div>
+					<div id='sc'>删除</div>
+					<div id='del'>X</div>
+				</div>
+			</div>
+		</div>
+		<script src="/javascripts/socket.io.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="/javascripts/mui.min.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript">
+			var add = document.getElementById('add');
+			var dataTable =document.getElementById('data-table');
+//			var dataTr =document.querySelectorAll('.data-tr');
+			var trDom = document.getElementsByTagName('tr');
+			var pbox = document.querySelector('.p-box');
+			var leftbox = document.querySelector('.left-box');
+			var headTable = document.getElementById('head-table');
+			var topbtn = document.getElementById('top');
+			var cleanbtn = document.getElementById('clean');
+			var delbtn  = document.getElementById('del');
+			var appbtn = document.getElementById('app');
+			var print = document.getElementById('print');
+			var code = document.getElementById('code');
+			var today = document.getElementById('today');
+			var bigPic = document.createElement('img');
+			var qjbtn = document.getElementById('qj');
+			var ptbtn = document.getElementById('pt');
+			var scbtn = document.getElementById('sc');
+			var search = document.getElementById('search-btn');
+			var a,PArg = [],BoolLits=false;
+			var CgS = [],PicS = [],Lacks = [],Prices = [];
+			var bz;
+
+			window.onload = function(){
+				//链接socket 服务
+				socket = io.connect('ws://www.xiapierp.com');
+				socket.on('connect',function() { 
+					console.log('成功创建socket链接');
+				});
+				socket.on('disconnect',function() { 
+					console.log('链接已关闭');
+				})
+			};
+			
+			//添加按钮
+			add.addEventListener('click',function(){
+					if(!BoolLits){
+						alert('未选择采购单');
+						return false;
+					}
+
+					if(!code.value == ''){
+
+						$.ajax({
+						    type: 'POST',
+						    url:'/purchasing/code',
+						    data:{code:code.value},
+						    dataType:'json',    
+						     success: function(data){
+						     	console.log(data);
+						     	var pictd;
+						     	if(data.hasOwnProperty('doc')){
+						     		/*2017-2-17 添加备注逻辑从这里开始*/
+						     		/*PArg =[code:...,tipe:...,code:...,tipe:...,code:...,tipe:...]*/
+						     		PArg.push(data.doc.code,'');
+						     		PicS.push('0');
+						     		Lacks.push('');
+						     		Prices.push('');
+						     		/*采购状态push数组CgS*/
+						     		CgS.push('false');
+
+						     		tr = document.createElement('tr');
+									a = trDom.length-1;
+									tr.setAttribute('data-id',a);
+									tr.setAttribute('data-code',data.doc.code);
+									tr.className = 'data-tr';
+
+									if(data.doc.pic == null){
+										pictd =	'<td><img class="pic" alt=""/></td>'
+									}else{
+										pictd =  '<td><span class="leftbtn"><</span><span class="rightbtn">></span><img class="pic" src="./uploadImg/'+data.doc.code+'/'+ data.doc.pic[0]+'" alt=""/></td>';
+										// pictd =  '<td><img class="pic" src="./uploadImg/'+data.doc.code+'/'+ data.doc.pic[0]+'" alt=""/></td>';
+									}
+									tr.innerHTML =	pictd +
+													'<td>'+data.doc.title+'</td>'+
+													'<td>'+data.doc.supplier+'<br/><br/>'+data.doc.address+'</td>'+
+													'<td>'+data.doc.website+'</td>'+
+													'<td class="remarks" contenteditable="true"></td>';
+
+									dataTable.appendChild(tr);
+									a++;
+	
+									/*判断清除键出现*/
+									if(trDom[1]){
+										cleanbtn.style.display = 'block';
+									};
+									console.log(PArg);
+									console.log(CgS);
+									console.log(PicS);
+									// localStorage.setItem('PArg',PArg.join());
+
+						     	}else{
+						     		alert('未搜索到相应产品');
+									code.focus();
+									return false;
+						     	}
+						     },
+						     error:function(err){
+						     	console.log(err);
+						     }
+						});
+						
+					}else{
+						alert('未输入查找编号');
+						code.focus();
+					};
+					
+			});
+			
+			//返回顶部按钮逻辑
+			leftbox.addEventListener('scroll',function(e){
+				if(leftbox.scrollTop>0){
+					topbtn.style.display = 'block';
+					topbtn.style.opacity = 1;
+				}else if(leftbox.scrollTop==0){
+					topbtn.style.display = 'none';
+					topbtn.style.opacity = 0;
+				};
+			});
+
+			
+			/*对接APP*/
+			appbtn.addEventListener('click',function(){
+				console.log(PArg);
+				console.log(PicS);
+
+				var NDate = new Date();
+				var n = document.querySelector('.list-active').children[0].innerText,r;
+				var cgdatas = Array.prototype.slice.call(document.querySelectorAll('.remarks'));
+
+				cgdatas.forEach(function(value,item){
+					if(item == 0){
+						PArg[1] = value.innerText;
+					}else{
+						PArg[Number(item)*2+1] = value.innerText;
+					}
+				});
+
+				console.log(n);
+
+				console.log(PicS);
+
+				if(n){
+					$.ajax({
+					    type: 'POST',
+					    url:'/purchasing/time',
+					    data:{Time:n},
+					    dataType:'json',    
+					     success: function(data){
+					     	if(data.code!=0){
+					     		r = confirm(n+'已经有此日期采购单,是否覆盖');
+					     		if(r){
+					     			$.ajax({
+									    type: 'POST',
+									    url:'/purchasing/updata',
+									    data:{Time:n,Arr:PArg,CgS:CgS,PicS:PicS,Lacks:Lacks,Prices:Prices},
+									    dataType:'json',    
+									     success: function(data){
+									     	if(data.code==0){
+									     		alert('保存成功')
+									     		socket.emit('updataCGD',{Time:n});
+									     	}else{
+									     		alert('保存失败，请稍后再试');
+									     	}
+									     },
+									     error:function(err){
+									     	console.log(err);
+									     }
+									});
+					     		}
+					     	}else{
+					     		$.ajax({
+								    type: 'POST',
+								    url:'/purchasing/save',
+								    data:{Time:n,Arr:PArg,CgS:CgS,PicS:PicS,Lacks:Lacks,Prices:Prices},
+								    dataType:'json',    
+								     success: function(data){
+								     	if(data.code==0){
+								     		alert('保存成功')
+								     		socket.emit('createCGD',{Time:n});
+								     	}else{
+								     		alert('保存失败，请稍后再试');
+								     	}
+								     },
+								     error:function(err){
+								     	console.log(err);
+								     }
+								});
+					     	}
+					     },
+					     error:function(err){
+					     	console.log(err);
+					     }
+					});
+
+				}else{
+					alert('未选择采购单');
+				}
+
+			});
+			
+			today.addEventListener('click',function(){
+				var listUl = document.querySelector('.list-ul');
+				var n = new Date();
+				BoolLits = true;
+				listUl.innerHTML = '<li class="list-li list-active"><span class="date">'+n.getFullYear()+'-'+(n.getMonth()+1)+'-'+n.getDate() +'</span>采购单</li>';
+				mui.trigger(document.querySelector('.list-li'),'click');	
+			})
+			
+			topbtn.addEventListener('click',function(){
+				leftbox.scrollTop = 0;
+			});
+			
+			cleanbtn.addEventListener('click',function(){
+
+				for(var l=trDom.length-1; l>0;l--){
+					trDom[l].remove();
+				};
+
+				cleanCgsT();
+				cleanTipe();
+
+				PArg = [];
+				CgS = [];
+				PicS = [];
+				Lacks = [];
+				Prices = [];
+
+				cleanbtn.style.display = 'none';
+				// localStorage.removeItem('PArg');
+			});
+			
+			mui('#data-table').on('mousemove','.data-tr',function(e){
+				delbtn.style.top = 76+'px'; 
+				delbtn.style.display = 'block';
+				if(delbtn.offsetTop!=delbtn.offsetTop+(this.dataset.id*181)){
+//					console.log(true);
+					delbtn.style.top = delbtn.offsetTop+(this.dataset.id*181)+'px'; 	
+				}
+//				console.log(delbtn.offsetTop);
+			});
+			
+			mui('#data-table').on('mouseout','.data-tr',function(e){	
+				delbtn.style.display = 'none';
+//				console.log(delbtn.offsetTop);
+			});
+
+			delbtn.addEventListener('click',function(e){
+				if(trDom.length == 0){
+					cleanbtn.style.display ='none';
+				}
+				// cleanCgsT();
+				cleanTipe();
+
+				trDom[((delbtn.offsetTop-76)/181)+1].remove();
+
+				PArg.splice((((delbtn.offsetTop-76)/181)*2),2);
+				PicS.splice(((delbtn.offsetTop-76)/181),1);
+				CgS.splice(((delbtn.offsetTop-76)/181),1);
+				Lacks.splice(((delbtn.offsetTop-76)/181),1);
+				Prices.splice(((delbtn.offsetTop-76)/181),1);
+
+				delbtn.style.display = 'none';
+				delbtn.style.top = 76+'px'; 
+
+				for(var i = 1;i<trDom.length;i++){
+					
+					if(trDom[i].dataset.cgs == 'true'){
+						trDom[i].setAttribute('data-cgs','true');
+		     			var cgsT = document.createElement('div');
+			     		cgsT.innerText = '已采购';
+			     		cgsT.className = 'cgsT';
+			     		cgsT.style.top = (Number(i)-1) * 182 + 'px'
+			     		leftbox.appendChild(cgsT);
+			     	}else{
+			     		trDom[i].setAttribute('data-cgs','false');
+			     	}
+
+					trDom[i].setAttribute('data-id',i-1);
+				}
+				if(!trDom[1]){
+					cleanbtn.style.display = 'none';
+				};
+			});
+			delbtn.addEventListener('mousemove',function(){
+				delbtn.style.display = 'block';
+			});
+			print.addEventListener('click',function(){
+				mui.openWindow({url:'/appList'})
+			});	
+			ptbtn.addEventListener('click',function(){
+				document.getElementById('interval-scearch').style.display='none';
+				document.getElementById('pt-scearch').style.display ='block';
+			});
+			
+			qjbtn.addEventListener('click',function(){
+				document.getElementById('pt-scearch').style.display ='none';
+				document.getElementById('interval-scearch').style.display ='block';
+			});
+			
+			mui('#data-table').on('mousemove','.pic',function(e){
+				bigPic.setAttribute('src',this.getAttribute('src'));
+				bigPic.className = 'bigPic';
+				bigPic.style.top = e.y-200 + 'px';
+				bigPic.style.left =e.x-400 + 'px';
+				pbox.appendChild(bigPic);
+//				console.log(this.getAttribute('src'));
+			});
+
+			mui('.list-ul').on('click','.list-li',function(){
+				
+				var that = this;
+				that.className = 'no-tap-list';
+				
+
+				BoolLits = true;
+				PArg = [];
+				CgS = [];
+				PicS = [];
+				Lacks=[];
+				Prices=[];
+
+				var fragment = document.createDocumentFragment();
+
+				cleanCgsT();
+				cleanTipe();
+				
+				for(var l=trDom.length-1; l>0;l--){
+					trDom[l].remove();
+				};
+
+				var cglist = document.querySelectorAll('.list-li');
+				for(var i=0;i<cglist.length;i++){
+					if(cglist[i].classList.contains('list-active')){
+						cglist[i].classList.remove('list-active');
+					};
+				};
+				
+				this.classList.add('list-active');
+				scbtn.style.display = 'block';
+
+					$.ajax({
+					    type: 'POST',
+					    url:'/purchasing/time',
+					    data:{Time:this.children[0].innerText},
+					    dataType:'json',    
+					     success: function(data){
+					     	if(data){
+					     		console.log(data);
+					     		if(data.hasOwnProperty('doc')){
+					     			var thisCgd = data.doc.Arr;
+					     			var thisCgS = data.doc.CgS;
+									var thisPicS = [],thisLacks = [], thisPrices = []; 
+
+
+									/*初始化图片数组*/
+					     			if(data.doc.hasOwnProperty('PicS')){
+
+					     				if(data.doc.PicS.length == thisCgS.length){
+					     					thisPicS = data.doc.PicS;
+					     					PicS = thisPicS;
+					     				}else{
+					     					for(var i= 0;i<thisCgS.length;i++){
+					     					thisPicS[i] = '0';
+						     				};
+						     				PicS = thisPicS;
+					     				}
+
+					     			}else{
+					     				for(var i= 0;i<thisCgS.length;i++){
+					     					thisPicS[i] = '0';
+					     				};
+					     				PicS = thisPicS;
+					     			};
+
+						     		/*初始化金额数组*/
+									if(data.doc.hasOwnProperty('Prices')){
+										
+					     				if(data.doc.Prices.length == thisCgS.length){
+					     					thisPrices = data.doc.Prices;
+					     					Prices = thisPrices;
+					     				}else{
+					     					thisPrices = Array(thisCgS.length);
+					     					for(var i= 0;i<thisPrices.length;i++){
+					     						thisPrices[i] = '';
+						     				};
+						     				Prices = thisPrices;
+					     				}
+
+					     			}else{
+					     				for(var i= 0;i<thisCgS.length;i++){
+					     					thisPrices[i] = '';
+					     				};
+					     				Prices = thisPrices;
+					     			};
+					     			
+					     			/*初始化缺货数组*/
+									if(data.doc.hasOwnProperty('Lacks')){
+										
+					     				if(data.doc.Lacks.length == thisCgS.length){
+					     					thisLacks = data.doc.Lacks;
+					     					Lacks = thisLacks;
+					     				}else{
+					     					thisLacks = Array(thisCgS.length);
+					     					for(var i= 0;i<thisCgS.length;i++){
+					     						thisLacks[i] = '';
+						     				};
+						     				Lacks = thisLacks;
+					     				}
+
+					     			}else{
+					     				for(var i= 0;i<thisCgS.length;i++){
+					     					thisLacks[i] = '';
+					     				};
+					     				Lacks = thisLacks;
+					     			};
+
+								
+					     			var index = 0;
+									var quryCgd = [],tipeArr = [];
+
+						     		for(var i = 0;i<thisCgd.length/2;i++){
+										quryCgd.push(thisCgd[index]);
+										index++;
+										tipeArr.push(thisCgd[index]);
+										index++;
+									};
+
+					     		}else{
+					     			return false;
+					     		}
+
+					     		$.ajax({
+								    type: 'POST',
+								    url:'/purchasing/cgd',
+								    data:{PArr:quryCgd},
+								    dataType:'json',    
+								     success: function(data){
+								     	if(!thisCgd){
+								     		return false
+								     	}
+								     	var pictd;
+
+								     	for(var i = 0; i<quryCgd.length;i++){
+								     		PArg.push(quryCgd[i],tipeArr[i]);
+
+								     		/*2017-3-11 这里似乎多此一举*/
+								     		CgS.push(thisCgS[i]);
+
+								     		tr = document.createElement('tr');
+
+								     		for(var i2=0;i2<data.length;i2++){
+								     			if(quryCgd[i] == data[i2].code){
+								     				tr.setAttribute('data-id',i);
+								     				tr.setAttribute('data-code',data[i2].code);
+								     				tr.setAttribute('data-cgs',thisCgS[i]);
+													tr.className = 'data-tr';
+													if(data[i2].pic == null){
+														pictd =	'<td><img class="pic" alt=""/></td>'
+													}else{
+														pictd = '<td><span class="leftbtn"><</span><span class="rightbtn">></span><img class="pic" src="./uploadImg/'+data[i2].code+'/'+ data[i2].pic[thisPicS[i]]+'" alt=""/></td>';
+														// pictd = '<td><img class="pic" src="./uploadImg/'+data[i2].code+'/'+ data[i2].pic[0]+'" alt=""/></td>';
+													};
+													tr.innerHTML =	pictd +
+																	'<td>'+data[i2].title+'</td>'+
+																	'<td>'+data[i2].supplier+'<br/><br/>'+data[i2].address+'</td>'+
+																	'<td>'+data[i2].website+'</td>'+
+																	'<td class="remarks" contenteditable="true">'+tipeArr[i]+'</td>';
+								     			}
+								     			fragment.appendChild(tr);
+								     		}
+								     	}
+								     	dataTable.appendChild(fragment);
+
+								     	/*是否已经采购的状态*/
+								     	var datatr = document.querySelectorAll('.data-tr')
+								     	for(var i3=0;i3<datatr.length;i3++){
+
+							     			var tipe = document.createElement('div');
+								     		tipe.style.top = i3 * 182 + 'px';
+
+								    		if(thisCgS[i3] == 'true'){
+								    			datatr[i3].setAttribute('data-cgs','true');
+								     			var cgsT = document.createElement('div');
+									     		cgsT.innerText = '已采购';
+									     		cgsT.className = 'cgsT';
+									     		cgsT.style.top = i3 * 182 + 'px'
+									     		leftbox.appendChild(cgsT);
+
+									     		tipe.className = 'tipe s-je';
+									     		tipe.innerText = '购买金额:'+thisPrices[i3];
+
+									     		if(thisPrices[i3]== ''){
+									     			tipe.style.display = 'none';
+									     		};
+									     			
+									     		leftbox.appendChild(tipe);
+
+									     	}else{
+									     		datatr[i3].setAttribute('data-cgs','false');
+
+									     		tipe.innerText = '缺货备注:'+thisLacks[i3];
+									     		tipe.className = 'tipe s-qh';
+
+									     		if(thisLacks[i3]== ''){
+									     			tipe.style.display = 'none';
+									     		}
+
+									     		leftbox.appendChild(tipe);
+									     	};
+								     	};
+
+								     	if(datatr.length != 0){
+											cleanbtn.style.display = 'block'
+										}else{
+											cleanbtn.style.display='none';
+										};
+
+										that.className = 'list-li list-active';
+
+								     },
+								     error:function(err){
+								     	console.log(err);
+								     }
+								});
+					     	}
+					     },
+					     error:function(err){
+					     	console.log(err);
+					     }
+					});
+			});
+			
+			search.addEventListener('click',function(){
+
+				scbtn.style.display = 'none';
+				mui.trigger(cleanbtn,'click');
+
+				var Ntime = document.getElementById('now-time');
+				var ltime = document.getElementById('l-time');
+				var rtime = document.getElementById('r-time');
+				var listUl = document.querySelector('.list-ul');
+				
+				var timeArayy = [];
+
+				listUl.innerHTML = '';
+				BoolLits = false;
+				
+				if(document.getElementById('pt-scearch').style.display=='block'){
+
+					if(Ntime.value == ''){
+						alert('未选择时间');
+						return false;
+					}
+
+					var Ntime =	Ntime.value.split("-");
+					Ntime[2].charAt(0) == 0? Ntime[2] = Ntime[2].charAt(1):Ntime[2];
+
+					$.ajax({
+					    type: 'POST',
+					    url:'/purchasing/pt',
+					    data:{Time:Ntime.join('-')},
+					    dataType:'json',    
+					     success: function(data){
+					     	if(data.doc){
+								li = document.createElement('li');
+								li.className='list-li';
+								li.innerHTML ='<span class="date">'+data.doc.Time+'</span>采购单';
+					     		listUl.appendChild(li);
+					     	}else{
+					     		alert('未查到此日期采购单');
+					     	}
+					     },
+					     error:function(err){
+					     	console.log(err);
+					     }
+					});
+				};
+
+				if(document.getElementById('interval-scearch').style.display=='block'){
+					if(ltime.value == ''||rtime.value == ''){
+						alert('未选择时间');
+						return false;
+					}
+					
+					if(ltime.value > rtime.value){
+						alert('开始时间不能大于结束时间');
+						return false;
+					}else if(ltime.value < rtime.value){
+						var bngDate = new Date(ltime.value.substr(0,4),ltime.value.substr(5,2)-1,ltime.value.substr(8,2));
+            			var endDate = new Date(rtime.value.substr(0,4),rtime.value.substr(5,2)-1,rtime.value.substr(8,2));
+            			var day = -((bngDate.getTime()-endDate.getTime())/24/60/60/1000);
+            			var fragment = document.createDocumentFragment();
+            			
+            			for(var i =0 ; i<=day;i++){
+            				var n =bngDate.getTime()+i*24*60*60*1000;
+            				var sDate = new Date(n);
+            				console.log(sDate.getFullYear()+'-'+(parseInt(sDate.getMonth())+1)+'-'+sDate.getDate());
+            				timeArayy.push(sDate.getFullYear()+'-'+(parseInt(sDate.getMonth())+1)+'-'+sDate.getDate());
+            			};
+
+            			console.log(timeArayy);
+
+            			$.ajax({
+						    type: 'POST',
+						    url:'/purchasing/qj',
+						    data:{TimeArr:timeArayy},
+						    dataType:'json',    
+						     success: function(data){
+						     	console.log(data)
+						     	if(data.docs.length!=0){
+						     		for(var i = 0; i<data.docs.length;i++){
+										li = document.createElement('li');
+										li.className='list-li';
+										li.innerHTML ='<span class="date">'+data.docs[i].Time+'</span>采购单';
+										fragment.appendChild(li);
+						     		}
+						     		listUl.appendChild(fragment);
+						     	}else{
+						     		alert('暂无此期间采购单');
+						     	}
+						     },
+						     error:function(err){
+						     	console.log(err);
+						     }
+						});
+
+
+            			
+					}else if(ltime.value = rtime.value){
+
+						$.ajax({
+						    type: 'POST',
+						    url:'/purchasing/pt',
+						    data:{Time:ltime.value},
+						    dataType:'json',    
+						     success: function(data){
+						     	if(data.doc){
+									li = document.createElement('li');
+									li.className='list-li';
+									li.innerHTML ='<span class="date">'+data.doc.Time+'</span>采购单';
+						     		listUl.appendChild(li);
+						     	}else{
+						     		alert('未查到此日期采购单');
+						     	}
+						     },
+						     error:function(err){
+						     	console.log(err);
+						     }
+						});
+					};
+				}
+			});
+
+
+
+			scbtn.addEventListener('click',function(){
+				var removeTime = document.querySelector('.list-active').children[0].innerText;
+				var r = confirm('确定删除 '+removeTime+' 吗？');
+				if(r){
+					$.ajax({
+					    type: 'POST',
+					    url:'/purchasing/remove',
+					    data:{Time:removeTime},
+					    dataType:'json',    
+					     success: function(data){
+					     	if(data.code == 0){
+					     		 alert('删除成功');
+					     		 document.querySelector('.list-active').remove();
+					     		 BoolLits = false;
+					     		 mui.trigger(cleanbtn,'click');
+					     		 scbtn.style.display = 'none';
+					     	}else{
+					     		alert('删除失败，请稍后再试');
+					     	}
+					     },
+					     error:function(err){
+					     	console.log(err);
+					     }
+					});
+				}
+			});
+			
+			mui('#data-table').on('mouseout','.pic',function(e){
+				pbox.children[pbox.children.length-1].remove();
+			});
+
+			var rightIndex,thatCode,picArg,thatli;
+
+			mui('#data-table').on('click','.rightbtn',function(){
+				var	that = this;
+				thatCode = this.parentNode.parentNode.dataset.code;
+				thatli = this.parentNode.parentNode.dataset.id;
+				thispic = decodeURI(this.nextSibling.src.split('/')[5]);
+
+				setTimeout(function() {
+					$.ajax({
+				    type: 'POST',
+				    url:'/purchasing/code',
+				    data:{code:thatCode},
+				    dataType:'json',    
+					     success: function(data){
+					     	picArg = data.doc.pic;
+
+					     	for(var x in picArg){
+					     		if(picArg[x] == thispic){
+					     			if(Number(x)+1 == picArg.length){
+					     				break;
+					     			}else{
+					     				that.nextSibling.src = './uploadImg/'+thatCode+'/'+ picArg[Number(x)+1];
+					     				PicS[thatli] = Number(x)+1;
+					     				break;
+					     			}
+					     		}
+					     	}
+					     },
+					     error:function(err){
+					     	console.log(err);
+					     }
+					});
+				}, 0);
+
+				return false;
+			});
+			
+			mui('#data-table').on('click','.leftbtn',function(){
+				var	that = this;
+				thatCode = this.parentNode.parentNode.dataset.code;
+				thatli = this.parentNode.parentNode.dataset.id;
+				thispic = decodeURI(this.nextSibling.nextSibling.src.split('/')[5]);
+
+				setTimeout(function() {
+					$.ajax({
+				    type: 'POST',
+				    url:'/purchasing/code',
+				    data:{code:thatCode},
+				    dataType:'json',    
+					     success: function(data){
+					     	picArg = data.doc.pic;
+
+					     	for(var x in picArg){
+					     		if(picArg[x] == thispic){
+					     			if(x == '0'){
+					     				break;
+					     			}else{
+					     				that.nextSibling.nextSibling.src = './uploadImg/'+thatCode+'/'+ picArg[Number(x)-1];
+					     				PicS[thatli] = Number(x)-1;
+					     				break;
+					     			}
+					     		}
+					     	}
+					     },
+					     error:function(err){
+					     	console.log(err);
+					     }
+					});
+				}, 0);
+
+				return false;
+			});
+
+			function cleanCgsT(){
+				var cgsTs =	Array.prototype.slice.call(document.querySelectorAll('.cgsT'));
+
+				for(var x in cgsTs){
+					cgsTs[x].remove();
+				};
+			}
+
+			function cleanTipe(){
+				var cgsTs =	Array.prototype.slice.call(document.querySelectorAll('.tipe'));
+
+				for(var x in cgsTs){
+					cgsTs[x].remove();
+				};
+			}
+		</script>
+	</body>
+</html>

@@ -1,0 +1,194 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title><%= title %></title>
+		<link rel="stylesheet" type="text/css" href="stylesheets/mui.css">
+		<link rel="stylesheet" type="text/css" href="stylesheets/total.css"/>
+	</head>
+	
+	<body>
+		<h2 class='head'>虾皮总金额</h2>
+		<div id="top">您好   <span id='username'><%= session %></span><button id='logout'>登出</button></div>
+		<div class="content-box">
+			<div id='user'>
+
+			</div>
+			
+			<!--底部box-->
+			<div id='total-box'>
+				<div id='total-title'>
+					<div>出货金额</div>
+					<div>成本</div>
+					<div>货运费用</div>
+					<div>出货笔数</div>
+				</div>
+				<div id='total-num'>
+					<div id='ch'></div>
+					<div id='cb'></div>
+					<div id='yf'></div>
+					<div id='num'></div>
+				</div>、
+			</div>
+		
+		<script type="text/javascript" src="javascripts/jquery-1.11.1.min.js" ></script>
+		<script>
+			$(function(){
+
+				var logout = document.getElementById('logout');
+				var	userbox = document.getElementById('user');
+
+				logout.addEventListener('click',function(){
+					window.location.href = '/logout';
+				})
+				
+				//统计模块实现				
+				var tch = 0,tcb = 0, tyf =0,tnum = 0; 
+				var Index = 0;
+								
+				$.ajax({
+					type: 'POST',
+				   	dataType:'json',
+				    url:'/AllUser',
+				     success: function(data){
+						var res = data.msg;
+						res.forEach(function(value,item){
+
+							var ch = 0,cb = 0,yf = 0, num = 0;
+
+							/****************************/
+							$.ajax({
+							    type: 'POST',
+							   	dataType:'json',
+							   	data:{username:value.username}, 
+							    url:'/chtj/fine',
+							     success: function(data){
+							     	var tables = data;
+									localStorage.setItem(value.username+'table',JSON.stringify(tables));
+									
+							     	if(tables.length != 0){
+							     		//查看已经录入数据的用户
+							     		// console.log(item.dataset.user);
+										for(var x2 in tables){
+											// console.log(item.table);
+											var table = JSON.parse(tables[x2].table);			
+											
+											for(var x in table){
+												if(table[x].state == '已出货' || table[x].state == '已出貨' || !table[x].hasOwnProperty('state')){	
+													cb += Number(table[x].cost);
+													ch += Number(table[x].subtotal);
+													yf += Number(table[x].szfreight);
+													// num += Number(table[x].consultation.split(/\[\d\]/g).length-1);
+													num += 1;
+												};
+											};
+										};
+									};
+
+									var useritem = document.createElement('div');
+									useritem.className = 'user-box';
+//									console.log("res[y]:"+value.username);
+									useritem.innerHTML = '<div class="u-user"><label>用户：</label><span class="username" >'+value.username+'</span></div>'+
+											'<select>'+
+												'<option value="0">全部</option>'+
+												'<option value="1">一月</option>'+
+												'<option value="2">二月</option>'+
+												'<option value="3">三月</option>'+
+												'<option value="4">四月</option>'+
+												'<option value="5">五月</option>'+
+												'<option value="6">六月</option>'+
+												'<option value="7">七月</option>'+
+												'<option value="8">八月</option>'+
+												'<option value="9">九月</option>'+
+												'<option value="10">十月</option>'+
+												'<option value="11">十一月</option>'+
+												'<option value="12">十二月</option>'+
+											'</select>'+
+											'<div class="u-user"><label>出货金额：</label><span class="ch">'+ch+'</span></div>'+
+											'<div class="u-user"><label>成本：</label><span class="cb">'+cb.toFixed(1)+'</span></div>'+
+											'<div class="u-user"><label>货运费用：</label><span class="yf">'+yf+'</span></div>'+
+											'<div class="u-user"><label>出货笔数：</label><span class="num">'+num+'</span></div>';
+									userbox.appendChild(useritem);
+
+									Index++;
+
+									tch += ch,
+									tcb += cb, 
+									tyf += yf,
+									tnum += num;
+
+									if(Index == res.length){
+										$('body').trigger('total');
+									};
+
+							     },	
+							     error:function(err){
+							     	console.log(err);
+							     }
+							});
+							/****************************/
+
+						});
+
+				     },
+				     error:function(err){
+				     	console.log(err);
+				     }
+				});
+
+				$('body').bind('total',function(){
+					document.getElementById('ch').innerText = tch;
+					document.getElementById('cb').innerText = tcb.toFixed(1);
+					document.getElementById('yf').innerText = tyf;
+					document.getElementById('num').innerText = tnum;
+					
+					var selects = Array.prototype.slice.apply(document.querySelectorAll('select'));
+					
+					for(var i in selects){
+						selects[i].addEventListener('change',function(){
+							var pBox = this.parentNode;
+							var uName = pBox.querySelector('.username').innerText;
+							var tableData = JSON.parse(localStorage.getItem(uName+'table'));
+							var ch = 0,cb = 0,yf = 0,num = 0;
+							
+							for(var i2 in tableData){
+								 if(tableData[i2].tablename.split('-')[1] == this.value){
+								 	var tableDataObj = JSON.parse(tableData[i2].table);
+									 	for(var i3 in tableDataObj){
+									 		if(tableDataObj[i3].state == '已出货' || tableDataObj[i3].state == '已出貨' || !tableDataObj[i3].hasOwnProperty('state')){	
+												cb += Number(tableDataObj[i3].cost);
+												ch += Number(tableDataObj[i3].subtotal);
+												yf += Number(tableDataObj[i3].szfreight);
+												// num += Number(table[x].consultation.split(/\[\d\]/g).length-1);
+												num += 1;
+											};
+									 	}
+								 }else if(this.value == 0){
+								 	var tableDataObj = JSON.parse(tableData[i2].table);
+								 	for(var i3 in tableDataObj){
+								 		if(tableDataObj[i3].state == '已出货' || tableDataObj[i3].state == '已出貨' || !tableDataObj[i3].hasOwnProperty('state')){	
+											cb += Number(tableDataObj[i3].cost);
+											ch += Number(tableDataObj[i3].subtotal);
+											yf += Number(tableDataObj[i3].szfreight);
+											// num += Number(table[x].consultation.split(/\[\d\]/g).length-1);
+											num += 1;
+										};
+									 }
+								 }
+							};
+							
+							pBox.querySelector('.ch').innerText = ch;
+							pBox.querySelector('.cb').innerText = cb.toFixed(1);
+							pBox.querySelector('.yf').innerText = yf;
+							pBox.querySelector('.num').innerText = num;
+							
+						});
+					}
+					
+				});
+				
+				
+			});
+		</script>
+	</body>
+</html>

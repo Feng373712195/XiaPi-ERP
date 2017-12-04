@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<link rel="stylesheet" type="text/css" href="stylesheets/index.css"/>
+		<link rel="stylesheet" type="text/css" href="stylesheets/data.css"/>
+		<link rel="stylesheet" type="text/css" href="stylesheets/btnbox.css"/>
+		<script type="text/javascript" src='/javascripts/jquery-1.3.2.min.js'></script>
+		<title><%= title %></title>
+		<style type="text/css">
+		</style>
+	</head>
+	<body>
+		<div id='table-title'>产品咨询</div>
+		<table id='data-table' border="1">
+			<tr>
+				<th>主图</th>
+				<th>标题</th>
+				<th>产品编码</th>
+				<th>产品价格</th>
+				<th>供应商资料</th>
+				<th>拿货地址</th>
+				<th>网上采购</th>
+				<th>备注</th>
+			</tr>
+		</table>
+
+		<!-- 用户列表 -->
+		<ul class='userlist'></ul>
+		<div id='pagebox'>
+
+			<ul class='pagebtnbox clearfix'>
+				<li class='pagebtn'> << </li>
+				<li class='pagebtn'> 上一页 </li>
+				<li class='pagebtn  btn-active'> 1 </li>
+				<li class='pagebtn'> 2 </li>
+				<li class='pagebtn'> 3 </li>
+				<li class='pagebtn'> ... </li>
+				<li class='pagebtn'> 下一页 </li>
+				<li class='pagebtn'> >> </li>
+			</ul>	
+		
+
+			<span id='jumppageBox'>
+				<p>共<span id='pageNum'></span>页</p>
+				<input type='number' id='pageNumInput'>
+				<span id='sureJump'>跳转</span>
+			</span>
+		</div>
+
+		<div class="btnbox bleft">
+			<button id='searchbtn'>查找数据</button>
+			<button id='frombtn'>录入数据</button>
+			<button id='backbtn'>返回</button>
+			<span id='gn'>选项</span>
+		</div>
+		
+		<script src="javascripts/mui.min.js"></script>
+		<script src="javascripts/btnbox.js" type="text/javascript" charset="utf-8"></script>
+		<script>
+		window.onload = function(){
+
+			var dataTable = document.getElementById('data-table');
+			var searchbtn = document.getElementById('searchbtn');
+			var frombtn = document.getElementById('frombtn');
+			var backbtn = document.getElementById('backbtn');
+
+			var li;
+			var ul = document.querySelector('.userlist');
+			var datasize = 15;
+
+			$.ajax({
+			    type: 'POST',
+			    url:'/AllUser',
+			    dataType:'json',    
+			     success: function(data){
+			     	var users = data.msg;
+			     	for(var x in users){
+			     		li = document.createElement('li');
+			     		if(x == 0){
+			     			li.className = 'userli li-active';
+			     		}else{
+			     			li.className = 'userli'
+			     		}
+			     		li.setAttribute('data-letter',users[x].letter);
+			     		li.innerText = users[x].username;
+			     		li.style.backgroundColor = getRandomColor();
+			     		ul.appendChild(li);
+			     	};
+
+			     	getData(users[0].letter,0,datasize,function(data){
+			     		AssignmentPageNum(1);
+			     	})
+			     },
+			     error:function(err){
+			     	console.log(err);
+			     }
+			});
+
+			
+			mui('#data-table').on('click','.data-tr',function(){
+				mui.openWindow({
+					url:'details/'+this.children[2].innerText,
+					id:'details'
+				});
+			});
+
+			mui('.userlist').on('click','li',function(){
+				document.querySelector('.li-active').classList.remove('li-active');
+				this.classList.add('li-active');
+				this.style.backgroundColor = getRandomColor();
+
+				var letter = this.dataset.letter;
+				var pageNum = 0;
+				mui('#pageNumInput')[0].value = '';
+
+				getData(letter,0,datasize,function(data){
+					AssignmentPageNum(1);
+				});
+			});
+
+			mui('.pagebtnbox').on('click','.pagebtn',function(){
+				if(this.classList.contains('btn-seize')){
+					return;
+				};
+
+
+
+				var pageTotalNum = Number(mui('#pageNum')[0].innerText);
+				var FlipNum = mui('.btn-active')[0].innerText == 1?0:Number(mui('.btn-active')[0].innerText)-1;
+				switch (this.innerText){
+					case '<<':
+						AssignmentPageNum(1);
+						getData(mui('.li-active')[0].dataset.letter,0,datasize,function(data){});
+						break;
+					case '>>':
+						AssignmentPageNum(pageTotalNum);
+						getData(mui('.li-active')[0].dataset.letter,Number((pageTotalNum-1)*datasize),datasize,function(data){});
+						break;
+					case '上一页':
+						AssignmentPageNum(FlipNum);
+						getData(mui('.li-active')[0].dataset.letter,Number((FlipNum-1)*datasize),datasize,function(data){});
+						break;
+					case '下一页':
+						AssignmentPageNum(FlipNum+2);
+						getData(mui('.li-active')[0].dataset.letter,Number((FlipNum+1)*datasize),datasize,function(data){});
+						break;
+					case '...':
+						break;
+					default:
+						var activePageNum = this.innerText == 1?0:Number(this.innerText)-1;
+						AssignmentPageNum(Number(this.innerText));
+						getData(mui('.li-active')[0].dataset.letter,Number(activePageNum*datasize),datasize,function(data){});
+						break;
+				}
+				
+			});
+
+			mui('#sureJump')[0].addEventListener('click',function(){
+
+				if(Number(mui('#pageNumInput')[0].value) > Number(mui('#pageNum')[0].innerText) ){
+					alert('超过最大页数');
+					return;
+				}
+
+				var activePageNum = mui('#pageNumInput')[0].value == 1?0:Number(mui('#pageNumInput')[0].value)-1;
+				AssignmentPageNum(Number(mui('#pageNumInput')[0].value));
+				getData(mui('.li-active')[0].dataset.letter,Number(activePageNum*datasize),datasize,function(data){});
+			});
+
+			searchfun(searchbtn);
+			fromfun(frombtn);
+			indexfun(backbtn);		
+		};
+
+		function getRandomColor  (){    
+		  return  '#' +    
+		    (function(color){    
+		    return (color +=  '0123456789abcdef'[Math.floor(Math.random()*16)])    
+		      && (color.length == 6) ?  color : arguments.callee(color);    
+		  })('');    
+		};	
+
+		function getData(letter,pageNum,pageSize,callback){
+
+			var dataTable = document.getElementById('data-table'); 
+			var dataTrs = document.querySelectorAll('.data-tr');
+			var Totalpages = document.getElementById('pageNum');
+
+			for(var i = 0; i<dataTrs.length;i++){
+				dataTrs[i].remove();
+			}
+
+			$.ajax({
+			    type: 'POST',
+			    url:'/data',
+			    data:{letter:letter,pageNum:pageNum,pageSize:pageSize},
+			    dataType:'json',    
+			     success: function(data){
+
+			     	var userdata = data.userData;
+			     	var userdatalenght = Number(data.datalenght);
+			     
+			     	Totalpages.innerText = calculationPage(userdatalenght,15);
+
+			     	var trdom = document.createDocumentFragment(),tr,pic;
+
+			     	if(userdata.length == 0){
+			     		return callback(false);
+			     	}
+
+			     	for(var x in userdata){
+			     		tr =  document.createElement('tr');
+			     		tr.className = 'data-tr';
+
+			     		if(userdata[x].pic.length != 0){
+			     			pic =  '<td><img class="pic" src="./uploadImg/'+userdata[x].code+'/'+userdata[x].pic[0]+'" alt=""></td>';
+			     		}else{
+			     			pic = '<td><img class="pic" alt=""></td>';
+			     		}
+
+			     		tr.innerHTML =  pic+
+								     	'<td>'+userdata[x].title+'</td>'+
+										'<td id="code">'+userdata[x].code+'</td>'+
+										'<td>'+userdata[x].price+'</td>'+
+										'<td>'+userdata[x].supplier+'</td>'+
+										'<td>'+userdata[x].address+'</td>'+
+										'<td>'+userdata[x].website+'</td>'+
+										'<td>'+userdata[x].emarks+'</td>'
+						trdom.appendChild(tr);
+			     	};
+
+			     	dataTable.appendChild(trdom);
+
+			     	return callback(true);
+			     },
+			     error:function(err){
+			     	console.log(err);
+			     }
+			});
+
+		}
+
+
+		function calculationPage(totle,num){
+			/*totle数量总数 num每页数量*/
+			var totle = totle;
+			var num = num;
+			var pageNum = 1;
+
+			return (function(){
+				var bool = true;
+				while (bool){
+					totle = totle - num;
+					if(totle <= num && totle >0){
+						pageNum++;
+						bool = false;
+					}else if(totle > num ){
+						pageNum++;
+					}else if(totle == 0 || totle < 0){
+						bool = false;
+					};
+				};
+				return pageNum;
+			})(totle,num,pageNum);
+		}
+
+		// pagebtns[6].classList.remove('btn-seize');
+		// pagebtns[8].classList.remove('btn-seize');
+		/*分派按钮页数*/
+		function AssignmentPageNum(activePgae,totlepagenum){
+			// var activePgae = document.querySelector('.btn-active').innerText;
+			var pagebtns =  Array.prototype.slice.call(document.querySelectorAll('.pagebtn'));
+			var totlePageNum = totlepagenum?totlepagenum:document.getElementById('pageNum').innerText;	
+
+			document.querySelector('.btn-active').classList.remove('btn-active');
+
+			for(var x in pagebtns){
+				if(pagebtns[x].classList.contains('btn-seize')){
+					pagebtns[x].classList.remove('btn-seize');
+				};
+			};
+
+			if(totlePageNum<=3){
+				pagebtns[5].classList.add('btn-seize');
+			};
+
+			if(activePgae == 1){
+				pagebtns[0].classList.add('btn-seize');
+				pagebtns[1].classList.add('btn-seize');
+
+
+				pagebtns[2].innerText = '1';
+				pagebtns[3].innerText = '2';
+				pagebtns[4].innerText = '3';
+
+				pagebtns[2].classList.add('btn-active');
+
+				for(var i = 0; i<=2; i++){
+					if(Number(activePgae)+i == totlePageNum){
+						for(var i2 = i + 3;i2<=pagebtns.length-1;i2++){
+							pagebtns[i2].classList.add('btn-seize');
+						}
+						break;
+					}
+				}
+				return;
+			};
+
+
+			if(activePgae == totlePageNum){
+
+				for(var x in pagebtns){
+					if(x==2){
+						pagebtns[x].innerText = Number(totlePageNum)-1;
+					}
+					if(x==3){
+						pagebtns[x].innerText = totlePageNum;
+						pagebtns[x].classList.add('btn-active');
+						pagebtns[x].style.borderLeft = '1px solid #CCCCCC'
+					}
+					if(x>3){
+						pagebtns[x].classList.add('btn-seize');
+					}
+				}
+				return;
+			};
+
+
+			if(activePgae < totlePageNum){
+
+				if(Number(activePgae)>1){
+					pagebtns[0].classList.remove('btn-seize');
+					pagebtns[1].classList.remove('btn-seize');
+					pagebtns[2].style.borderLeft = 'none';
+				}
+
+				for(var x in pagebtns){
+					if(x==2){
+						pagebtns[x].innerText = Number(activePgae)-1;
+					}
+					if(x==3){
+						pagebtns[x].innerText = activePgae;
+						pagebtns[x].classList.add('btn-active');
+					}
+					if(x==4){
+						pagebtns[x].classList.remove('btn-seize');
+						pagebtns[x].innerText = Number(activePgae)+1;
+					}
+
+					if(x==5){
+						if(Number(activePgae)+1 == totlePageNum){
+							pagebtns[5].classList.add('btn-seize');
+						}
+					};
+				}
+			};
+		}
+
+		</script>
+	</body>
+</html>

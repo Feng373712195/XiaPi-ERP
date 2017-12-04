@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title><%= title %></title>
+		<link rel="stylesheet" type="text/css" href="stylesheets/mui.css">
+		<link rel="stylesheet" type="text/css" href="stylesheets/index.css"/>
+	</head>
+	
+	<body>
+		<div id='content-box'>
+			<div id="top"><span id='username'>您好   <%= session %></span><button id='logout'>登出</button></div>
+			<h2 id='title'>虾皮ERP</h2>
+			<div class="btn-box">
+				<a href="data">查看数据</a>
+				<a href="from">录入数据</a>
+				<a href="search">搜索数据</a>
+				<a href="purchasing">采购单</a>
+			</div>
+			<div class="btn-box">
+				<a href="chtj">出货统计</a>
+				<a href="chje">出货金额</a>
+				<a href="total">虾皮总金额</a>
+			</div>
+		</div>
+		
+		<script type="text/javascript" src='/javascripts/jquery-1.3.2.min.js'></script>
+		<script type="text/javascript">
+			var logout = document.getElementById('logout');
+
+			logout.addEventListener('click',function(){
+				window.location.href = '/logout';
+			})
+		</script>
+	</body>
+</html>

@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title><%=title %></title>
+		<link rel="stylesheet" type="text/css" href="/stylesheets/from.css"/>
+		<link rel="stylesheet" type="text/css" href="/stylesheets/btnbox.css"/>
+		<script type="text/javascript" src='/javascripts/jquery-1.3.2.min.js'></script>
+	</head>
+	<body>
+		<h2 class='head'>产品修改</h2>
+		<form  method="post" action='/revise' enctype='multipart/form-data'>
+			<div class="input-row">
+				<label>标题</label>
+				<input type="text" id="title" name="title" value="<%= doc.title %>" placeholder="必填"/>
+			</div>
+			<div class="input-row">
+				<label>上传图片</label>
+				<div id="upload_box">
+					<input type='file' multiple="true" name='Picfiel'/>
+					<% if(doc.pic) {%>
+						<input type="text" id='Oldfiles' name='Oldfiles' value="<%= doc.pic.toString() %>" style = 'display:none;'>
+					<% } %> 
+				</div>
+				<ul class="pic-box" id="pic-box">
+					<% if(doc.pic) {%>
+						<% if(doc.pic[0]){ %>
+							<li class="pic-Item" data-filename="<%= doc.pic[0] %>" ><img class="Item-pic" src="/uploadImg/<%= doc.code %>/<%= doc.pic[0] %>" alt=""/></li>
+						<% }else {%>
+							<li class="pic-Item" >主图</li>
+						<% } %>
+
+						<% for(var i = 1;i<9;i++) {%>
+							<% if(doc.pic[i]){ %>
+								<li class="pic-Item" data-filename="<%= doc.pic[i] %>" ><img class="Item-pic"  src="/uploadImg/<%= doc.code %>/<%= doc.pic[i] %>" alt=""/></li>
+							<% }else {%>
+								<li class="pic-Item" >副图</li>
+							<% } %>
+						<% } %>
+					<% }else {%>
+						<li class="pic-Item" data-id='1' >主图</li>
+						<li class="pic-Item" data-id='2'>副图</li>
+						<li class="pic-Item" data-id='3'>副图</li>
+						<li class="pic-Item" data-id='4'>副图</li>
+						<li class="pic-Item" data-id='5'>副图</li>
+						<li class="pic-Item" data-id='6'>副图</li>
+						<li class="pic-Item" data-id='7'>副图</li>
+						<li class="pic-Item" data-id='8'>副图</li>
+						<li class="pic-Item" data-id='9'>副图</li>
+					<% } %> 
+				</ul>
+			</div>
+			<!--<div class="input-row">
+				<label>产品编码</label>
+				<input type="text" id="code" name="code"  value="<%= doc.code %>" placeholder="必填"/>
+				<input type="text" id="OldCode" name='OldCode' value="<%= doc.code %>" style = 'display:none;' >
+			</div>-->
+			
+			<div class="input-row">
+				<label>产品编码</label>
+				<!-- readonly -->
+<!--				<div id='toggleCodeInput' class="tci" >切换填写地址流水号</div>-->
+				<input type="text" id="code" name='code' value="<%= doc.code %>" placeholder="必填"/>
+				<input type="text" id="OldCode" name='OldCode' value="<%= doc.code %>" style = 'display:none;' >
+				
+				<div class='subInput'>
+					<input id="dz" name="dz" type="text"  class='subtext'  placeholder='填写地址编号'>
+				</div>
+			</div>
+			
+			<div class="input-row">
+				<label>产品价格</label>
+				<input type="text" id="price" name="price" value="<%= doc.price %>" placeholder="必填"/>
+			</div>
+			<div class="input-row">
+				<label>供应商资料</label>
+				<input type="text" id="supplier" name="supplier"	value="<%= doc.supplier %>"	placeholder="必填" />
+			</div>
+			<div class="input-row">
+				<label>拿货地址</label>
+				<input type="text" id="address" name="address" value="<%= doc.address %>" placeholder="必填"/>
+			</div>
+			<div class="input-row">
+				<label>网上采购</label>
+				<input type="text" id="website" name="website" value="<%= doc.website %>" placeholder="必填"/>
+			</div>
+			<div class="input-row">
+				<label>备注</label>
+				<input type="text" id="emarks" name="emarks" value="<%= doc.emarks %>" placeholder="必填"/>
+			</div>
+			<!--<btn id='getbtn'>存入</btn>-->
+		</form>
+
+		<button type="button" id='btn'>修改</button>
+		
+		<div class="btnbox bleft">
+			<button id='indexbtn'>主页</button>
+			<button id='databtn'>查看数据</button>
+			<button id='backbtn'>取消修改</button>
+			<span id='gn'>选项</span>
+		</div>
+
+	<script src="/javascripts/Sortable-edit.js" type="text/javascript" charset="utf-8"></script>
+	<script type="text/javascript" src="/javascripts/mui.min.js" ></script>
+	<script type="text/javascript" src="/javascripts/jquery-1.3.2.min.js"></script>
+	<script src="/javascripts/btnbox.js" type="text/javascript" charset="utf-8"></script>
+	<script src="/javascripts/from.js" type="text/javascript" charset="utf-8"></script>
+	<script type="text/javascript">
+		
+		var codeInput = mui('input[name="code"]')[0];
+		var Indexbtn = document.getElementById('indexbtn');
+		var databtn = document.getElementById('databtn');
+		var backbtn = document.getElementById('backbtn');
+		
+		indexfun(Indexbtn);
+		datafun(databtn);
+		backfun(backbtn);
+				
+		var distributeCode = codeInput.value;
+		
+//		mui('#toggleCodeInput')[0].addEventListener('click',function(){
+//						
+//			if(this.classList.contains('tci')){
+//				this.innerText = '切换填写普通编号 ';
+//				mui('.subInput')[0].style.display = 'block';
+//				
+//				if(/^[A-Z]{1}-\w{4}\-[A-Z]{1}\d{5}$/.test(mui('#OldCode')[0].value)){
+//					var codeArgs = mui('#OldCode')[0].value.split('-');
+//					mui('#dz')[0].value = codeArgs[0] + '-' + codeArgs[1];
+//					codeInput.value = codeArgs[2];
+//				};
+//				
+//				codeInput.style.width = '60%'; 
+//				codeInput.style.paddingLeft = '20%';
+//			}else{
+//				this.innerText = '切换填写地址流水号';
+//				mui('.subInput')[0].style.display = 'none';
+//				
+//				if(/^[A-Z]{1}-\w{4}\-[A-Z]{1}\d{5}$/.test(mui('#OldCode')[0].value)){
+//					var codeArgs = mui('#OldCode')[0].value.split('-');
+//					codeInput.value = codeArgs[2];
+//				};
+//				
+//				codeInput.style.width = '80%'; 
+//				codeInput.style.paddingLeft = '0%';
+//			};
+//			this.classList.toggle('mui-hidden');
+//			this.classList.toggle('tci');
+//		});
+		
+//		if(/^[A-Z]{1}-\w{4}\-[A-Z]{1}\d{5}$/.test(mui('#OldCode')[0].value)){
+//			mui.trigger(mui('#toggleCodeInput')[0],'click');
+//			var codeArgs = mui('#OldCode')[0].value.split('-');
+//			mui('#dz')[0].value = codeArgs[0] + '-' + codeArgs[1];
+//			codeInput.value = codeArgs[2];
+//		};
+
+		var codeArgs = mui('#OldCode')[0].value.split('-');
+		mui('#dz')[0].value = mui('#OldCode')[0].value.substr(0,Number( mui('#OldCode')[0].value.length ) - Number( codeArgs[codeArgs.length-1].length+1 ));
+		codeInput.value = codeArgs[codeArgs.length-1];
+		
+		btn.addEventListener('click',function(){
+
+			filesArray = [];
+			var submitS = true;
+
+			var o = [
+				{inpkey:'产品编号',inpval:code.value},
+				{inpkey:'地址编号',inpval:dz.value},
+				{inpkey:'产品价格',inpval:price.value},
+				{inpkey:'供应商资料',inpval:supplier.value},
+				{inpkey:'拿货地址',inpval:address.value},
+				{inpkey:'网上采购',inpval:website.value},
+				{inpkey:'备注',inpval:emarks.value},
+				{inpkey:'标题',inpval:title.value}
+			],o2 = [];
+			
+			for(var x in o){
+				if(o[x].inpval == ''){
+					o2.push(o[x].inpkey);
+				};
+			};
+			
+			if(o2!=''){
+				alert('['+o2+']这些字段为空，请仔细检查');
+				return;
+			}else{
+				
+				if(!/^[A-Z]{1}\d{5}$/.test(code.value)){
+					alert('产品编码格式错误 如:"A00001"');
+					code.focus();
+					return;
+				};
+				
+				if(!/^[A-Z]{1,6}(-\w{4,5}){0,1}$/.test(dz.value)){
+					alert('地址编码格式错误 如:A-456B,TB,ALBB-4566B');
+					dz.focus();
+					return;
+				}
+				
+				var formCode;
+				
+				formCode = dz.value + '-' + code.value;
+				code.value = formCode;
+
+				if(document.getElementById('OldCode').value != code.value){
+					
+					$.ajax({
+
+						type: 'POST',
+						url:'/purchasing/code',
+						dataType:'json', 
+						data:{code:formCode.trim()},
+						success: function(data){
+
+							if(!data.doc){
+
+								Form.submit();
+
+								setTimeout(function(){
+
+									if(PicArg.length!=0){
+											
+											$.ajax({
+							     				 type: 'POST',
+							     				 url:'/sortPic',
+							     				 dataType:'json', 
+							     				 data:{code:formCode.trim(),pic:PicArg},
+							     				 success: function(data){
+							     				 	if(data.code == 0){				
+							     				 		// alert(data.msg);
+							     				 		// mui.openWindow({url:'/data'});
+							     				 	}
+							     				 },
+							     				 error:function(err){
+							     				 	console.log(err);
+							     				 }
+							     			});
+
+										}else{
+
+											// mui.openWindow({url:'/data'});
+										}
+
+								},1000);
+
+							}else{
+								
+								alert('已有此编号的产品');
+							}
+						},
+						error:function(err){
+							console.log(err);
+						}
+					})
+
+				}else{
+
+					Form.submit();
+					
+					if(PicArg.length!=0){
+						
+						console.log('sortPic');
+						
+						$.ajax({
+		     				 type: 'POST',
+		     				 url:'/sortPic',
+		     				 dataType:'json', 
+		     				 data:{code:formCode.trim(),pic:PicArg},
+		     				 success: function(data){
+		     				 	if(data.code == 0){				
+		     				 		// alert(data.msg);
+		     				 		// mui.openWindow({url:'/data'});
+		     				 	}
+		     				 },
+		     				 error:function(err){
+		     				 	console.log(err);
+		     				 }
+		     			});
+
+					}else{
+
+						// mui.openWindow({url:'/data'});
+					}
+
+				}
+			}
+		})
+			
+   </script>
+	</body>
+	
+</html>

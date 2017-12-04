@@ -1,0 +1,173 @@
+body{
+	min-width: 1680px;
+}
+
+.head{
+	text-align: center;
+	margin: 0 auto;
+	margin-bottom: 20px;
+	margin-top: 20px;
+	width: 90%;
+	color: gray;
+}
+
+.content-box{
+	background-color: lightgray;
+	margin: 0 auto;
+	width: 95%;
+	height: 90vh;
+}
+
+
+/*表格样式*/
+
+#Excel-box{
+	margin: 0 auto;
+	margin-top: 20px;
+	width: 99%;
+	height: 60vh;
+	border: 1px solid gray;
+	overflow-x: scroll;
+	overflow-y: scroll;
+}
+#Excel-box .E-head{
+	height: 60px;
+	line-height: 60px;
+	border-bottom: 1px solid gray;
+	color: white;
+	background-color: darkgray;
+}
+#Excel-box .E-head div{
+	border-right: 1px solid gray;
+}
+
+#Excel-box .E-head,#Excel-box .E-content{
+	width:3500px;
+}
+
+.E-big{
+	width: 500px;
+	word-wrap:break-word;  /*遇到空格整个单词显示不完就自动换行到下一行*/
+	word-break:break-all;
+}
+.E-middle{
+	width: 300px;
+	word-wrap:break-word;  /*遇到空格整个单词显示不完就自动换行到下一行*/
+	word-break:break-all;
+}
+.E-small{
+	width: 150px;
+	word-wrap:break-word;  /*遇到空格整个单词显示不完就自动换行到下一行*/
+	word-break:break-all;
+}
+
+#Excel-box .E-head div,#Excel-box .E-content  .E-line div{
+	text-align: center;
+	display:table-cell;
+}
+
+.E-line div{
+	background-color: white;
+	vertical-align: middle;
+	padding: 10px 0;
+	border:1px solid gray ;
+}
+
+/*top*/
+#top{
+	width: 25%;
+	font-size: 1.0rem;
+	position: fixed;
+	top: 10px;
+	right: 40px;
+}
+
+#top #username{
+	display: inline-block;
+}
+
+#top button{
+	display: inline-block;
+	vertical-align: middle;
+	margin-left: 10%;
+}
+
+#Choice-ch{
+	width: 99%;
+	margin: 0 auto;
+	margin-top: 20px;
+	padding: 0;
+	height: 100px;
+	list-style: none;
+	border: 1px solid gray;
+	overflow-y: scroll;
+}
+
+#Choice-ch li{
+	margin: 0 auto;
+	margin: 5px 0;
+	margin-left: 0.5%;
+	width: 99%;
+	background-color:gray;
+	color: white;
+	padding:0.5%;
+	-webkit-transition: 0.5s;
+}
+#Choice-ch li:active{
+	background-color: gainsboro;
+}
+
+.li-active{
+	background-color: darkgray !important;
+}
+
+/*合计盒子样式*/
+#total-box{
+	float: left;
+	margin: 1% 0 0 0.5%;
+}
+
+#total-box #total-title div{
+	display: table-cell;
+	height: 50px;
+	width: 150px;
+	border: 1px solid darkolivegreen;
+	line-height: 50px;
+	text-align: center;
+	background-color: gray;
+	color: white;
+}
+
+#total-box #total-num div{
+	display: table-cell;
+	height: 50px;
+	width: 150px;
+	border: 1px solid darkolivegreen;
+	line-height: 50px;
+	text-align: center;
+	background-color: lightslategray;
+	color: white;
+}
+
+.bottom-btnbox .right-box{
+	margin-right: 0.5%;
+	margin-top: 60px;
+	float: right;
+}
+
+#save{
+	margin-left: 40px;
+}
+
+.highlight{
+	background-color:#00ff00;
+	color: #fff;
+}
+
+.picbox{
+	position: fixed;
+	display: none;
+	width: 200px;
+	height: 200px;
+	background-color: #fff;
+}

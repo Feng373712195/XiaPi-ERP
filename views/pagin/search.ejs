@@ -1,0 +1,297 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title><%= title %></title>
+		<link rel="stylesheet" href="/stylesheets/from.css" />
+		<link rel="stylesheet" type="text/css" href="/stylesheets/data.css"/>
+		<link rel="stylesheet" type="text/css" href="/stylesheets/btnbox.css"/>
+		<script type="text/javascript" src='/javascripts/jquery-1.3.2.min.js'></script>
+		<style type="text/css">
+			#searchbox{
+				line-height: 38px;
+				height: 39px;
+				margin: 40px auto;
+				width: 90%;
+			}
+			#searchType{
+				width: 10%;
+				margin-right: 4%;
+			}
+			.input-box{
+				position: relative;
+				float: right;
+				width: 85%;
+			}
+			#searchText{
+				padding-left: 80px;
+				width: 91.5%;
+			}
+			#data-table{
+				margin-top: 40px;
+			}
+			#data-table .data-tr:hover{
+				opacity: 0.5;
+			}
+			#set{
+				background-color: darkgray;
+				padding:0px 10px 0px 10px;
+				font-size: 12px;
+				position: absolute;
+				top: 0;
+				color: white;
+			}
+			#add{
+				display: none;
+				position: absolute;
+				top: 0;
+				left:90px;
+				margin-top: 7px;
+				padding: 0px 10px;
+				font-size: 12px;
+				color: deepskyblue;
+				background-color: inherit;
+				border-radius:5px;
+				border: 1px solid deepskyblue;
+				height: 25px;
+				line-height: 25px;
+				transition: 0.5s;
+				-webkit-transition: 0.5s;
+			}
+			.anbox{
+				margin: 0 auto;
+				width: 90%;
+				background-color: red;
+			}
+			.anbox .inside .anbtn{
+				text-align: center;
+				float: left;
+				display: block;
+				margin: 0px auto;
+				margin-bottom:40px ;
+				text-decoration: none;
+				cursor: *-resize;
+				border-radius:5px;
+				border: 0;
+				color: white;
+				background-color: gray;
+				padding: 15px 0;
+				width: 100%;
+				font-size: 15px;
+				font-weight:bold;
+			}
+			.anbox .inside .anbtn:first-child{
+				margin-right: 10%;
+			}
+			.inside{
+				background-color: yellow;
+				margin: 0 auto;
+				width: 25%;
+			}
+		</style>
+	</head>
+	<body>
+		<h2 class='head'>产品搜索</h2>
+		<div id='searchbox'>
+			<select id="searchType">
+				<option value="code">产品编码</option>
+				<option value="supplier">供应商资料</option>
+				<option value="price">产品价格</option>
+				<option value="address">拿货地址</option>
+				<option value="website">网上采购</option>
+				<option value="emarks">备注</option>
+				<option value="title">标题</option>
+			</select>
+			<div class="input-box">
+				<input type="text" id="searchText"/>
+				<div id="set">模糊搜索</div>
+			</div>
+		</div>
+		
+		<div class="anbox">
+			<div class="inside">
+				<button type="button" class="anbtn" id='searchBtn'>搜索</button>
+			</div>
+		</div>
+		
+		<table id='data-table' border="1">
+			<tr>
+				<th>主图</th>
+				<th>标题</th>
+				<th>产品编码</th>
+				<th>产品价格</th>
+				<th>供应商资料</th>
+				<th>拿货地址</th>
+				<th>网上采购</th>
+				<th>备注</th>
+			</tr>
+		</table>
+		
+		<div class="btnbox bleft">
+			<button id='frombtn'>录入数据</button>
+			<button id='databtn'>查看数据</button>
+			<button id='backbtn'>返回</button>
+			<span id='gn'>选项</span>
+		</div>
+		
+		<script src="javascripts/mui.min.js"></script>
+		<script src="javascripts/btnbox.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript">
+			mui.init();
+			var searchType = document.getElementById('searchType');
+			var TyepItem = searchType.options;
+			var searchText = document.getElementById('searchText');
+			var searchBtn =document.getElementById('searchBtn');
+			var zjBtn = document.getElementById('zjbtn');
+			var fragment = document.createDocumentFragment();
+			var dataTable = document.getElementById('data-table');
+			var frombtn = document.getElementById('frombtn');
+			var databtn = document.getElementById('databtn');
+			var backbtn = document.getElementById('backbtn');
+			var dataTr = dataTable.childNodes;	
+			var Trleng =dataTr.length;
+			var setbtn = document.getElementById('set');
+			var addbtn = document.getElementById('add');
+			var oldL = 0,textL,dataArray=[];
+//			var addArr = localStorage.getItem('addData')?localStorage.getItem('addData').split(","):[];
+			
+			fromfun(frombtn);
+			datafun(databtn);
+			indexfun(backbtn);
+			
+			//设置模糊搜索或者精确搜索
+			setbtn.addEventListener('click',function(){
+				var btntext = setbtn.innerText;
+				if(setbtn.innerText =='模糊搜索'){
+					localStorage.setItem('setbtn','精确搜索');
+					var r =localStorage.getItem('setbtn');
+					console.log(r);
+					setbtn.innerText = '精确搜索';
+				}else if(setbtn.innerText =='精确搜索'){
+					localStorage.setItem('setbtn','模糊搜索');
+					var r =localStorage.getItem('setbtn');
+					console.log(r);
+					setbtn.innerText='模糊搜索';
+				};
+			});
+
+			//搜索函数
+			function searchData(){
+
+				if(dataTr.length>2){
+					console.log(dataTr.length);
+					for(var a=dataTr.length-1;a>1;a--){
+						dataTable.removeChild(dataTr[a]);
+					}
+				}
+
+				var Type = searchType.value;
+				var query = searchText.value;
+				var queryObj =JSON.parse( '{"'+Type+'":"'+query+'"}');
+
+				$.ajax({
+				    type: 'POST',
+				    url:'/search',
+				    data:queryObj,
+				    dataType:'json',    
+				     success: function(data){
+				     	console.log(data)
+				     	if(data.length!=0){
+				     		$.each(data,function(Index,item){
+				     			var picTD;
+				     			var tr = document.createElement('tr');
+				     			tr.className="data-tr";
+				     			
+				     			if(item.pic != null){
+				     				picTD = '<td><img class="pic" src="./uploadImg/'+item.code+'/'+ item.pic[0]+'" alt=""/></td>'
+				     			}else{
+				     				picTD = '<td><img class="pic" alt=""/></td>'
+				     			}
+
+				     			tr.innerHTML = picTD +
+				     					'<td>'+item.title+'</td>'+
+										'<td>'+item.code+'</td>'+
+										'<td>'+item.price+'</td>'+
+										'<td>'+item.supplier+'</td>'+
+										'<td>'+item.address+'</td>'+
+										'<td>'+item.website+'</td>'+
+										'<td>'+item.emarks+'</td>'
+								fragment.appendChild(tr);
+
+				     		});
+							dataTable.appendChild(fragment);
+				     	}else{
+				     		alert('未搜索到相应产品');
+							searchText.focus();
+							return false;
+				     	}
+				     },
+				     error:function(err){
+				     	console.log(err);
+				     }
+				});
+			};
+			
+			
+			function vagueSearch(){
+				if(oldL>searchText.value.length){
+					console.log('删除了字符');
+				}else if(oldL<searchText.value.length){
+					oldL = searchText.value.length;
+					console.log('新增了字符');
+					searchData();
+				};
+			}
+			
+			// 事件绑定
+			searchBtn.addEventListener('click',function(){
+				searchData();
+			});
+			
+			// searchText.addEventListener('keyup',function(){				
+			// 	if(setbtn.innerText =='模糊搜索'){
+			// 		vagueSearch();
+			// 	}else if(setbtn.innerText =='精确搜索'){
+			// 		btnLeft();
+			// 	}
+			// });
+			
+			searchType.addEventListener('change',function(){
+				localStorage.setItem('TypeName',this.value);
+			});
+			
+			
+			//点击列跳转详细页
+			mui('#data-table').on('click','.data-tr',function(){
+				var selfCode = this.childNodes[2].innerText;
+
+				mui.openWindow({
+					url:'details/'+selfCode,
+					id:'details'
+				});
+
+			});
+			
+			
+			// 加载页面时
+			window.onload = function(){
+				var r = localStorage.getItem('setbtn')
+				if(r){
+					setbtn.innerText =r;
+				}
+
+				if(localStorage.getItem('TypeName')){
+		      		var TypeName = localStorage.getItem('TypeName');
+		      		for(var o=0;o<TyepItem.length;o++){
+		      			if(TyepItem[o].value == TypeName){
+		      				TyepItem[o].selected = true;
+		      			};
+		      		};
+	      		};
+			};
+			
+		</script>
+	</body>
+
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title><%= title %></title>
+		<script type="text/javascript" src='/javascripts/jquery-1.3.2.min.js'></script>
+		<style type="text/css">
+			.head{
+				text-align: center;
+				margin: 0 auto;
+				margin-bottom: 20px;
+				margin-top: 20px;
+				width: 90%;
+				color: gray;
+			}
+			#head-table{
+				background-color: darkgray;
+				table-layout:fixed;
+				width: 100%;
+				height: 40px;
+				margin: 0 auto;
+				margin-right:15px;
+				margin-top: 50px;
+				border-spacing: 0;
+				border-collapse: collapse;
+			}
+			#head-table tr th{
+				padding: 0px 20px;
+				color: white !important;
+			}
+			#data-table{
+				table-layout:fixed;
+				width: 100%;
+				margin: 0 auto;
+				border-spacing: 0;
+				border-collapse: collapse;
+			}
+			.pic{
+				display: inline-block;
+				vertical-align: middle;
+				background: red;
+				width: 170px;
+				height: 170px;
+			}
+			#head-table tr:first-child th{
+				color: red;
+				font-size: 12px;
+				padding: 5px 0;
+			}
+			#data-table tr td{
+				font-size: 12px;
+				height: 170px;
+				padding: 5px;
+				text-align: center;
+				overflow:hidden; 
+				text-overflow:ellipsis;
+			}
+			#data-table tr td:first-child{
+				text-align: left;
+				width: 170px;
+			}
+			#data-table tr td:nth-child(2),#data-table tr td:nth-child(3){
+				width: 20%;
+			}
+			#head-table tr:first-child th:first-child{
+				color: red;
+				font-size: 12px;
+				padding: 5px 0;
+				width: 170px;
+			}
+			#head-table tr:first-child th:nth-child(2),#head-table tr:first-child th:nth-child(3){
+				width: 20%;
+			}
+			#data-table .data-tr:hover{
+				opacity: 0.1;
+			}
+			#print{
+				position:fixed;
+				display: block;
+				opacity: 1;
+				right: 160px;
+				top:20px;
+				background-color:red;
+				height: 50px;
+				line-height: 50px;
+				width: 50px;
+				text-align: center;
+				color: white;
+				font-weight: bold;
+				font-family: "微软雅黑";
+				box-shadow: 1px 1px 5px 1px red;
+				transition: 2s;
+				-webkit-transition: 2s;
+			}
+		</style>
+	</head>
+	
+	<body>
+		<h2 class="head"><%= title %></h2>
+		<div id='databox'>
+			<div id='print'>打印</div>
+			<table id='head-table' border="0">
+					<tr>
+						<th>主图</th>
+						<th>标题</th>
+						<th>拿货地址</th>
+						<th>网上购买</th>
+						<th>备注</th>
+					</tr>
+			</table>
+			<div class="data-table">
+				<table id='data-table' border="1">
+				</table>
+			</div>
+		</div>
+		<script type="text/javascript">
+			var printBtn = document.getElementById('print');
+			printBtn.addEventListener('click',function(){
+				printBtn.style.display = 'none';
+				setTimeout(function(){
+					window.print();
+					printBtn.style.display = 'block'
+				},13);
+			});
+			
+//			document.getElementById('databox').innerText = localStorage.getItem('ListInfo');
+			window.onload = function(){
+				var fragment = document.createDocumentFragment();
+				var dataTable = document.getElementById('data-table');
+
+				$.ajax({
+					    type: 'POST',
+					    url:'/purchasing/time',
+					    data:{Time:localStorage.getItem('ListInfo')},
+					    dataType:'json',    
+					     success: function(data){
+					     	if(data){
+					     		console.log(data);
+					     		if(data.hasOwnProperty('doc')){
+					     			var thisCgd = data.doc.Arr;
+
+					     			var index = 0;
+									var quryCgd = [],tipeArr = [];
+
+						     		for(var i = 0;i<thisCgd.length/2;i++){
+										quryCgd.push(thisCgd[index]);
+										index++;
+										tipeArr.push(thisCgd[index]);
+										index++;
+									};
+
+					     		}else{
+					     			return false;
+					     		}
+
+					     		$.ajax({
+								    type: 'POST',
+								    url:'/purchasing/cgd',
+								    data:{PArr:quryCgd},
+								    dataType:'json',    
+								     success: function(data){
+								     	if(!thisCgd){
+								     		return false
+								     	}
+								     	var pictd;
+								     	for(var i = 0; i<quryCgd.length;i++){
+								     		tr = document.createElement('tr');
+								     		for(var i2=0;i2<data.length;i2++){
+								     			if(quryCgd[i] == data[i2].code){
+								     				tr.setAttribute('data-id',i);
+								     				tr.setAttribute('data-code',data[i2].code);
+													tr.className = 'data-tr';
+
+													if(data[i2].pic == null){
+														pictd =	'<td><img class="pic" alt=""/></td>'
+													}else{
+														pictd = '<td><img class="pic" src="../uploadImg/'+data[i2].code+'/'+ data[i2].pic[0]+'" alt=""/></td>'
+													};
+													tr.innerHTML =	pictd +
+																	'<td>'+data[i2].title+'</td>'+
+																	'<td>'+data[i2].supplier+'<br/><br/>'+data[i2].address+'</td>'+
+																	'<td>'+data[i2].website+'</td>'+
+																	'<td>'+tipeArr[i]+'</td>';
+								     			}
+								     			fragment.appendChild(tr);
+								     		}
+								     	}
+								     	dataTable.appendChild(fragment);
+								     },
+								     error:function(err){
+								     	console.log(err);
+								     }
+								});
+					     	}
+					     },
+					     error:function(err){
+					     	console.log(err);
+					     }
+					});
+			};
+		</script>
+	</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title><%=title%></title>
+		<link rel="stylesheet" type="text/css" href="stylesheets/mui.css">
+	</head>
+	<style>
+		#topbox{
+			text-align: center;
+			width: 50%;
+			margin: 0 auto;
+			margin-top: 10%;
+		}
+		#topbox #appName{
+			font-size: 2.5rem;
+		}
+		#topbox #tips{
+			margin-top: 2.5%;
+		}
+		/*登陆窗口*/
+		.pop-box{
+			margin: 0 auto;
+			width: 50%;
+			padding: 1.5%;
+			background-color: darkgray;
+		}
+		.pop-box .btn{
+			margin: 0 0% 0 0%;
+			width: 30%;
+		}
+		.btn:first-child{
+			margin: 0 10% 0 10%;
+		}
+		.btn-box{
+			width: 80%;
+			margin: 0 auto;
+		}
+		.icon{
+			width: 25px;
+			margin:8px 0 0 10px; 
+			position: absolute;
+		}
+
+		/*表单样式*/
+		.inp-box{
+			margin: 0 auto;
+			width: 80%
+		}
+		.inp-box label{
+			display:inline-block;
+			width: 30%;
+			color:#FFF;
+		}
+		.inp-box input{
+			padding-left: 5%;
+			margin-left:0%;
+			width: 68%
+		}
+	</style>
+	<body>
+		<div id='content'>
+			<div id='topbox'>
+				<span id='appName'>虾皮ERP</span> 
+				<p id='tips'>请注册用户</p>
+			</div>
+		</div>
+		<!--登陆框-->
+		<div class = 'pop-box'>
+			<div class='inp-box'>
+				<label>商户名称:</label>
+				<input type='text' name='username' id='username' placeholder="请输入商户名称">
+			</div>
+			<div class='inp-box'>
+				<label>密码:</label>
+				<input type='password' name="password" id='password' placeholder="请输入密码">
+			</div>
+			<div class='inp-box'>
+				<label>重复密码:</label>
+				<input type='password' name='repeat' id='repeat' placeholder="请输入重复密码">
+			</div>
+			<div class='inp-box'>
+				<label>注册码:</label>
+				<input type='number' name='regcode' id='regcode' placeholder="请输入内部注册码">
+			</div>
+			<div class='btn-box'>
+				<button id='reg' class='btn'>注册</button>
+				<button id='reset' class='btn'>重置</button>
+			</div>
+		</div>
+	</body>
+	
+	<script type="text/javascript" src='/javascripts/jquery-1.3.2.min.js'></script>
+	<script>
+		var reg = document.getElementById('reg');
+		var reset = document.getElementById('reset');
+		var usr = document.getElementById('username');
+		var psw = document.getElementById('password');
+		var repeat = document.getElementById('repeat');
+		var regcode = document.getElementById('regcode');
+
+		/*重置按钮逻辑*/
+		reset.addEventListener('click',function(){
+			usr.value = '';
+			psw.value = '';
+			repeat.value = '';
+			regcode.value = '';
+		});
+
+		reg.addEventListener('click',function(){
+
+			var o = [
+				{inpkey:'商户名称',inpval:usr.value},
+				{inpkey:'密码',inpval:psw.value},
+				{inpkey:'重复密码',inpval:repeat.value},
+				{inpkey:'内部注册码',inpval:regcode.value},
+			],
+			o2 = [];
+			
+			for(var x in o){
+				if(o[x].inpval == ''){
+					o2.push(o[x].inpkey);
+				};
+			};
+
+			if(o2!=''){
+				alert('['+o2+']这些字段为空，请仔细检查');
+				return;
+			}else{
+
+				if(psw.value != repeat.value){
+					alert('两次密码不一致，请仔细检查');
+				}else{
+						
+					$.ajax({
+		 				 type: 'POST',
+		 				 url:'/reg',
+		 				 dataType:'json', 
+		 				 data:{username:usr.value,password:psw.value,regcode:regcode.value},
+		 				 success: function(data){
+		 				 	if(data.code > 0 ){
+		 				 		alert(data.msg);
+		 				 		return;
+		 				 	}else if(data.code == 0){
+		 				 		alert(data.msg);
+		 				 		window.location.href = '/';
+		 				 	}
+		 				 },
+		 				 error:function(err){
+
+		 				 }
+		 			});
+				}
+			}
+		});
+
+
+	</script>
+</html>

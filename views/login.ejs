@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<link rel="stylesheet" type="text/css" href="stylesheets/mui.css">
+	</head>
+	<style>
+		#topbox{
+			text-align: center;
+			width: 50%;
+			margin: 0 auto;
+			margin-top: 10%;
+		}
+		#topbox #appName{
+			font-size: 2.5rem;
+		}
+		#topbox #tips{
+			margin-top: 2.5%;
+		}
+		
+		/*登陆窗口*/
+		.pop-box{
+			margin: 0 auto;
+			width: 50%;
+			background-color: darkgray;
+		}
+		
+		.pop-box #user{
+			margin: 8% 0 0% 10% ;
+			width: 80%;
+		}
+		.pop-box #login{
+			margin:5% 0% 5% 30%;
+			width: 40%;
+		}
+	</style>
+	<body>
+		<div id='content'>
+			<div id='topbox'>
+				<span id='appName'>虾皮ERP</span> 
+				<p id='tips'>请选择用户</p>
+			</div>
+		</div>
+		<!--登陆框-->
+		<div class = 'pop-box'>
+			<select id="user" name="User">
+				<option value="Andy007.tw">Andy007.tw</option>
+				<option value="Arvin.tw">Arvin.tw</option>
+				<option value="Yahooyy.tw">Yahooyy.tw</option>
+			</select>
+			<button id='login'>登陆</button>
+		</div>
+	</body>
+	
+	<script src="javascripts/mui.min.js"></script>
+	<script>
+		var login = document.getElementById('login');
+		var userS = document.getElementById('user');
+		
+		login.addEventListener('click',function(){
+			localStorage.setItem('user',userS.value);
+			mui.openWindow({
+				url:'/index'
+			})
+		});
+	</script>
+</html>

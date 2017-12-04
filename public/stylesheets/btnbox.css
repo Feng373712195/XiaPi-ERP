@@ -1,0 +1,46 @@
+.btnbox{
+	height: 60px;
+	width: 540px;
+	line-height: 60px;
+	background-color:lightgray;
+	top: 0;
+	margin-top: 25%;
+	position: fixed;
+	-webkit-transition:0.5s;
+	-moz-transition:width 0.5s;
+	-o-transition:width 0.5s;
+	transition: 0.5s;
+}
+
+.aleft{
+	left: 0px;
+}
+
+.bleft{
+	left: -498px;
+}
+
+.btnbox button{
+	color: white;
+	border-radius:5px ;
+	height: 40px;
+	width: 150px;
+	border: 0;
+	background-color: darkgray;
+}
+
+.btnbox button:first-child{
+	margin: 0px 10px 0px 10px;
+}
+.btnbox button:nth-child(2){
+	margin-right:10px ;
+}
+
+.btnbox span{
+	cursor:pointer;
+	float: right;
+	font-weight:bold ;
+	color: white;
+	display: inline-block;
+	padding-right: 10px;
+}

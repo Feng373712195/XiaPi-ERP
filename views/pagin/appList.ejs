@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<style type="text/css">
+			body{
+				background-color: white;
+			}
+			.head{
+				text-align: center;
+				margin: 0 auto;
+				margin-bottom: 20px;
+				margin-top: 20px;
+				width: 90%;
+				color: gray;
+			}
+			.list-box{
+				
+			}
+			.list-ul{
+				margin: 0;
+				padding: 0;
+				list-style: none;
+			}
+			.list-li{
+				font-family: "微软雅黑";
+				color: white;
+				padding: 20px;
+				background-color: deepskyblue;
+			}
+			.list-li{
+				-webkit-transition:0.5s;
+				cursor: pointer;
+			}
+			.list-li:active{
+				opacity: 0.5;
+			}
+			.list-li:hover{
+				background-color: darkturquoise;
+			}
+			.date{
+				padding-right:10px ;
+			}
+		</style>
+	</head>
+	<body>
+		<h2 class="head">采购单列表</h2>
+		<div class="list-box">
+			<ul class="list-ul">
+				<% lists.forEach(function(list,index) { %>
+					<li class="list-li"><span class="date"><%= list.Time %></span>采购单</li>
+				<% }); %>
+			</ul>
+		</div>
+		
+		<script src="/javascripts/mui.min.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript">
+			
+			// window.onload = function(){
+			// 	var keyArray = [];
+			// 	var fragment = document.createDocumentFragment();
+			// 	var listUl = document.querySelector('.list-ul');
+			// };
+			
+			mui('.list-ul').on('click','.list-li',function(){
+				localStorage.setItem('ListInfo',this.childNodes[0].innerText);
+				mui.openWindow({
+					url:'appInfo/'+this.childNodes[0].innerText
+				});
+			})
+			
+		</script>
+	</body>
+</html>
