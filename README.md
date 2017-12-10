@@ -7,5 +7,3 @@
  ## 2016年制作的 如今看起来太Low 也没有做XSS和CSRF攻击的防护
  
  ## 2018年准备升级 XiaPi-ERP2.0
- 
-[虾皮ERP](https://www.xiapierp.com)
